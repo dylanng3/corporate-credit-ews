@@ -1,0 +1,10 @@
+{
+  "percentiles": {
+    "red_pct": 0.05,
+    "amber_pct": 0.1
+  },
+  "thresholds": {
+    "red": 0.10185220988925474,
+    "amber": 0.025463562753036423
+  }
+}

@@ -1,35 +1,35 @@
 # Basel EWS Core Dependencies
-pandas>=2.2
-numpy>=1.26
-scikit-learn>=1.5
-lightgbm>=4.3
-xgboost>=2.1
-pyarrow>=16.0
+pandas
+numpy
+scikit-learn
+lightgbm
+xgboost
+pyarrow
+fastparquet
 
 # Analysis & Visualization  
 ipython
 jupyterlab
-matplotlib>=3.9
-seaborn>=0.13
-plotly>=5.17
+matplotlib
+seaborn
+plotly
 notebook
 
 # Model Explainability
-shap>=0.46
+shap
 
 # Calibration & Metrics
-scipy>=1.11
+scipy
 
 # Data Processing
-openpyxl>=3.1
-xlsxwriter>=3.2
+openpyxl
+xlsxwriter
 
 # Reporting
-jinja2>=3.1
+jinja2
 
 # Testing & Development
 pip
 pytest
 python-dotenv
 ruff
--e .

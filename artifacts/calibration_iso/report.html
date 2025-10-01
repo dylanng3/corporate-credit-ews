@@ -1,0 +1,31 @@
+
+    <html><head><meta charset="utf-8"><title>EWS Calibration Report</title></head>
+    <body>
+      <h1>EWS — Calibration (isotonic)</h1>
+      <h2>Holdout metrics</h2>
+      <ul>
+        <li>AUC: 0.6774</li>
+        <li>PR-AUC: 0.1055</li>
+        <li>KS: 0.3744</li>
+        <li>Brier: 0.0279</li>
+        <li>ECE: 0.0155</li>
+      </ul>
+      <h2>Calibration & PR</h2>
+      <img src="calibration_isotonic.png" width="420" />
+      <img src="pr_curve_isotonic.png" width="420" />
+      <h2>Cutoff</h2>
+      <pre>{
+  "capacity": {
+    "red_pct": 0.15,
+    "amber_pct": 0.1,
+    "thresholds": {
+      "red": 0.0,
+      "amber": 0.0
+    }
+  }
+}</pre>
+      <h2>Mapping</h2>
+      <p><code>mapping.csv</code> chứa các cột: <b>prob_calibrated</b>, <b>score_ews</b>, <b>tier</b>.</p>
+      <p><b>score_ews = round(100 * (1 - prob_calibrated), 2)</b>.</p>
+    </body></html>
+    

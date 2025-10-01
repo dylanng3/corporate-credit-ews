@@ -1,0 +1,28 @@
+
+    <html><head><meta charset="utf-8"><title>EWS Baseline Report</title></head>
+    <body>
+      <h1>EWS Baseline — LGBM</h1>
+      <h2>Holdout metrics</h2>
+      <ul>
+        <li>AUC: 0.8749</li>
+        <li>PR-AUC: 0.2074</li>
+        <li>KS: 0.7333</li>
+        <li>Brier: 0.0235</li>
+      </ul>
+      <h2>Calibration & PR curves</h2>
+      <img src="calibration_lgbm.png" width="420" />
+      <img src="pr_curve_lgbm.png" width="420" />
+      <h2>Thresholds</h2>
+      <pre>{
+  "red": 0.10185220988925474,
+  "amber": 0.025463562753036423
+}</pre>
+      <p>Red = top 5% (prob ≥ red), Amber = tiếp 10%, Green = còn lại.</p>
+      <h2>Outputs</h2>
+      <ul>
+        <li><code>scores_all.csv</code>: Xác suất đã hiệu chỉnh + Tier</li>
+        <li><code>thresholds.json</code></li>
+        <li><code>shap_summary.csv</code> + <code>shap_summary.png</code></li>
+      </ul>
+    </body></html>
+    
