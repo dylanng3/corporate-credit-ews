@@ -1,0 +1,11 @@
+{
+  "capacity": {
+    "thresholds": {
+      "red": 0.0,
+      "amber": 0.0
+    },
+    "red_pct": 0.15,
+    "amber_pct": 0.1
+  },
+  "calibration": "isotonic"
+}

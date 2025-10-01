@@ -120,7 +120,7 @@ def compute_behavioral_features(cr: pd.DataFrame, asof: pd.Timestamp) -> pd.Data
     dpd_max_180   = g["dpd_days"].max().rename("dpd_max_180d")
 
     # dpd_trend: slope dpd theo ngày trong OW
-    win["t"] = (win["date"] - start).dt.days
+    win["t"] = (win["date"] - start).dt.days # type: ignore
     slope = win.groupby("customer_id").apply(
         lambda x: np.polyfit(x["t"], x["dpd_days"], 1)[0] if len(x)>=2 else 0.0
     )
