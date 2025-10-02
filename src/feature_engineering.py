@@ -242,4 +242,4 @@ def main_cli():
 if __name__ == "__main__":
     main_cli()
 
-# python src/features.py --raw-dir data/raw --asof 2025-06-30 --out data/processed/features_ews
+# python src/feature_engineering.py --raw-dir data/raw --asof 2025-06-30 --out data/processed/feature_ews

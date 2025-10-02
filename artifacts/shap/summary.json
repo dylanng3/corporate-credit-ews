@@ -1,12 +1,12 @@
 {
-  "n_rows": 1000,
+  "n_rows": 10000,
   "n_features": 20,
   "top5_features": [
-    "dso__zs_sector_size",
-    "doh__zs_sector_size",
-    "ccc__zs_sector_size",
-    "%util_p95_60d__zs_sector_size",
-    "covenant_breach_cnt_180d__zs_sector_size"
+    "covenant_breach_cnt_180d__zs_sector_size",
+    "delta_dso_qoq__zs_sector_size",
+    "dpo__zs_sector_size",
+    "icr_ttm__zs_sector_size",
+    "%util_p95_60d__zs_sector_size"
   ],
   "outputs": {
     "feature_importance": "C:\\Users\\HLC\\OneDrive\\Dylandocs\\Projects\\corporate-credit-ews\\artifacts\\shap\\feature_importance.csv",
