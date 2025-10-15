@@ -1,4 +1,4 @@
-# src/train_baseline.py (LightGBM-only, no HTML report)
+# src/train_baseline.py
 from __future__ import annotations
 import argparse, json, sys
 from pathlib import Path
