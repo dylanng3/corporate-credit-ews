@@ -1,0 +1,22 @@
+{
+  "timestamp": "2025-10-15T21:02:36.563850",
+  "baseline_metrics": {
+    "auc": 0.9309,
+    "pr_auc": 0.1782,
+    "ks": 0.7927,
+    "brier": 0.0194
+  },
+  "current_metrics": {
+    "auc": 0.9881225614478607,
+    "pr_auc": 0.879451453367703,
+    "ks": 0.8765635959784895,
+    "brier": 0.014776669771535996
+  },
+  "alerts": {
+    "auc_alert": false,
+    "brier_alert": false,
+    "ks_alert": false
+  },
+  "psi_severe_count": 0,
+  "issues": []
+}

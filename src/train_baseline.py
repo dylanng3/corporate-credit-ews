@@ -74,7 +74,11 @@ def train_and_calibrate(
     X = df[feats].values
     y = df[target_col].astype(int).values
 
-    X_tr, X_te, y_tr, y_te = train_test_split(X, y, test_size=test_size, stratify=y, random_state=seed) # type: ignore
+    # Split with indices tracking
+    indices = np.arange(len(df))
+    X_tr, X_te, y_tr, y_te, idx_tr, idx_te = train_test_split(
+        X, y, indices, test_size=test_size, stratify=y, random_state=seed # type: ignore
+    )
 
     # LightGBM (imbalanced-aware)
     pos = y_tr.mean()
@@ -113,14 +117,51 @@ def train_and_calibrate(
         json.dumps({"percentiles":{"red_pct":red_pct,"amber_pct":amber_pct},"thresholds":thr}, indent=2),
         encoding="utf-8"
     )
+    
+    # Save baseline metrics for monitoring (IMPORTANT!)
+    (outdir/"baseline_metrics.json").write_text(
+        json.dumps({
+            "auc": metrics["AUC"],
+            "pr_auc": metrics["PR_AUC"],
+            "ks": metrics["KS"],
+            "brier": metrics["Brier"]
+        }, indent=2),
+        encoding="utf-8"
+    )
 
     # Save scores for trace
     df_out = df.copy()
     df_out["prob_calibrated"] = p_all
     df_out["tier"] = tiers_all
+    df_out["is_test"] = False  # Mark all as train initially
+    df_out.loc[df.index[idx_te], "is_test"] = True  # Mark test rows
     keep_id = [c for c in ["customer_id","sector_code","size_bucket"] if c in df_out.columns]
-    cols = keep_id + ["prob_calibrated","tier",target_col]
+    cols = keep_id + ["prob_calibrated","tier",target_col,"is_test"]
     df_out[cols].to_csv(outdir/"scores_all.csv", index=False)
+    
+    # CRITICAL: Save train/test features separately for proper monitoring
+    df_train = df.iloc[idx_tr].copy()
+    df_test = df.iloc[idx_te].copy()
+    
+    # Save to data/processed/ for monitoring
+    train_features_path = Path("data/processed/feature_ews_train.parquet")
+    test_features_path = Path("data/processed/feature_ews_test.parquet")
+    train_features_path.parent.mkdir(parents=True, exist_ok=True)
+    
+    df_train.to_parquet(train_features_path, index=False)
+    df_test.to_parquet(test_features_path, index=False)
+    
+    print(f"\n📊 Saved for monitoring:")
+    print(f"   ✅ Train set: {train_features_path} ({len(df_train)} rows, {y_tr.mean():.2%} default)")
+    print(f"   ✅ Test set:  {test_features_path} ({len(df_test)} rows, {y_te.mean():.2%} default)")
+    print(f"   ✅ Baseline metrics: {outdir}/baseline_metrics.json")
+    print(f"\n💡 To monitor on UNSEEN data (correct way):")
+    print(f"   python run_monitoring.py \\")
+    print(f"     --baseline-features {train_features_path} \\")
+    print(f"     --current-features {test_features_path}")
+    print(f"\n⚠️  IMPORTANT: Test set metrics should match baseline_metrics.json!")
+    print(f"   Expected: AUC~{metrics['AUC']:.3f}, PR-AUC~{metrics['PR_AUC']:.3f}")
+    print(f"   NOT: AUC~0.99, PR-AUC~0.88 (that's overfitting on training data!)")
 
     # Plots
     plot_calibration_pr(y_te, p_te, outdir, name="lgbm")
