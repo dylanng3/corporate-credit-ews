@@ -1,0 +1,65 @@
+# Stress Testing Scenarios for Corporate Credit Portfolio
+# Macroeconomic shocks and their impact on PD uplift
+
+scenarios:
+  - name: Base
+    description: "Current baseline - no stress"
+    shocks:
+      gdp_growth: 0.0
+      unemployment: 0.0
+      rates: 0.0
+      cpi: 0.0
+
+  - name: Mild_Recession
+    description: "Mild economic downturn - GDP contracts slightly, unemployment rises"
+    shocks:
+      gdp_growth: -2.0    # GDP growth drops 2pp
+      unemployment: 1.5   # Unemployment rises 1.5pp
+      rates: 0.5          # Interest rates increase 0.5pp
+      cpi: 1.0            # Inflation up 1pp
+
+  - name: Moderate_Recession
+    description: "Moderate recession - significant economic contraction"
+    shocks:
+      gdp_growth: -4.0    # GDP contracts 4%
+      unemployment: 3.0   # Unemployment up 3pp
+      rates: 1.0          # Rates up 1pp
+      cpi: 2.0            # Inflation up 2pp
+
+  - name: Severe_Recession
+    description: "Severe economic crisis - deep recession similar to 2008-2009"
+    shocks:
+      gdp_growth: -6.0    # GDP contracts 6%
+      unemployment: 5.0   # Unemployment spikes 5pp
+      rates: 0.0          # Rates may be cut (kept at 0 for conservative)
+      cpi: 0.5            # Lower inflation due to demand shock
+
+  - name: Stagflation
+    description: "Stagflation - high inflation with economic stagnation"
+    shocks:
+      gdp_growth: -1.0    # Minimal/negative growth
+      unemployment: 2.0   # Rising unemployment
+      rates: 3.0          # Central bank raises rates aggressively
+      cpi: 5.0            # High inflation
+
+  - name: Interest_Rate_Shock
+    description: "Sharp monetary tightening - rates spike rapidly"
+    shocks:
+      gdp_growth: -1.5    # Growth slows
+      unemployment: 1.0   # Unemployment rises moderately
+      rates: 4.0          # Rates spike 4pp
+      cpi: 3.0            # Persistent inflation
+
+  - name: Sector_Specific_Construction
+    description: "Construction sector crisis - real estate downturn"
+    shocks:
+      gdp_growth: -1.0
+      unemployment: 1.0
+      rates: 1.0
+      cpi: 0.5
+    sector_multipliers:
+      Construction: 2.0   # Construction sector PD doubles
+      Manufacturing: 1.2  # Some spillover to manufacturing
+      Retail: 1.1
+      Services: 1.0
+      Agriculture: 1.0

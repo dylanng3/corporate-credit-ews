@@ -116,7 +116,7 @@ def compute_behavioral_features(cr: pd.DataFrame, asof: pd.Timestamp) -> pd.Data
                     g_last60.groupby("customer_id")["limit"].mean()).rename("%util_p95_60d")
 
     # Breach/DPD
-    breach_cnt_90 = g.tail(90)["breach_flag"].groupby(level=0).sum().rename("limit_breach_cnt_90d")
+    breach_cnt_90 = g.tail(90).groupby("customer_id")["breach_flag"].sum().rename("limit_breach_cnt_90d")
     dpd_max_180   = g["dpd_days"].max().rename("dpd_max_180d")
 
     # dpd_trend: slope dpd theo ngày trong OW
@@ -141,13 +141,15 @@ def compute_behavioral_features(cr: pd.DataFrame, asof: pd.Timestamp) -> pd.Data
 def compute_cashflow_features(cf: pd.DataFrame, asof: pd.Timestamp) -> pd.DataFrame:
     start = asof - pd.Timedelta(days=OW_DAYS)
     win = cf[(cf["date"]>=start) & (cf["date"]<=asof)].copy()
-    g = win.groupby("customer_id")
-    inflow_mean_60  = g.tail(60)["inflow"].groupby(level=0).mean().rename("inflow_mean_60d")
-    outflow_mean_60 = g.tail(60)["outflow"].groupby(level=0).mean().rename("outflow_mean_60d")
-    inflow_med_6m   = g["inflow"].median().rename("inflow_median_6m")
-    inflow_drop_60  = ((inflow_med_6m - inflow_mean_60) /
-                       inflow_med_6m.replace(0,np.nan)).rename("inflow_drop_60d")
-    return pd.concat([inflow_mean_60, outflow_mean_60, inflow_drop_60], axis=1)
+    
+    # Get last 60 days and 6 months statistics
+    inflow_60 = win.groupby("customer_id").tail(60).groupby("customer_id")["inflow"].mean().rename("inflow_mean_60d")
+    outflow_60 = win.groupby("customer_id").tail(60).groupby("customer_id")["outflow"].mean().rename("outflow_mean_60d")
+    inflow_med_6m = win.groupby("customer_id")["inflow"].median().rename("inflow_median_6m")
+    
+    inflow_drop_60 = ((inflow_med_6m - inflow_60) / inflow_med_6m.replace(0, np.nan)).rename("inflow_drop_60d")
+    
+    return pd.concat([inflow_60, outflow_60, inflow_drop_60], axis=1)
 
 # ---------------------------
 # Covenant (OW=180d)

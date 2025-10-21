@@ -137,7 +137,7 @@ def train_and_calibrate(
     df_out.loc[df.index[idx_te], "is_test"] = True  # Mark test rows
     keep_id = [c for c in ["customer_id","sector_code","size_bucket"] if c in df_out.columns]
     cols = keep_id + ["prob_calibrated","tier",target_col,"is_test"]
-    df_out[cols].to_csv(outdir/"scores_all.csv", index=False)
+    df_out[cols].to_csv("data/processed/scores_calibrated.csv", index=False)
     
     # CRITICAL: Save train/test features separately for proper monitoring
     df_train = df.iloc[idx_tr].copy()
@@ -151,15 +151,15 @@ def train_and_calibrate(
     df_train.to_parquet(train_features_path, index=False)
     df_test.to_parquet(test_features_path, index=False)
     
-    print(f"\n📊 Saved for monitoring:")
-    print(f"   ✅ Train set: {train_features_path} ({len(df_train)} rows, {y_tr.mean():.2%} default)")
-    print(f"   ✅ Test set:  {test_features_path} ({len(df_test)} rows, {y_te.mean():.2%} default)")
-    print(f"   ✅ Baseline metrics: {outdir}/baseline_metrics.json")
-    print(f"\n💡 To monitor on UNSEEN data (correct way):")
+    print(f"\nSaved for monitoring:")
+    print(f"   Train set: {train_features_path} ({len(df_train)} rows, {y_tr.mean():.2%} default)")
+    print(f"   Test set:  {test_features_path} ({len(df_test)} rows, {y_te.mean():.2%} default)")
+    print(f"   Baseline metrics: {outdir}/baseline_metrics.json")
+    print(f"\n To monitor on UNSEEN data (correct way):")
     print(f"   python run_monitoring.py \\")
     print(f"     --baseline-features {train_features_path} \\")
     print(f"     --current-features {test_features_path}")
-    print(f"\n⚠️  IMPORTANT: Test set metrics should match baseline_metrics.json!")
+    print(f"\n  IMPORTANT: Test set metrics should match baseline_metrics.json!")
     print(f"   Expected: AUC~{metrics['AUC']:.3f}, PR-AUC~{metrics['PR_AUC']:.3f}")
     print(f"   NOT: AUC~0.99, PR-AUC~0.88 (that's overfitting on training data!)")
 
@@ -177,13 +177,13 @@ def train_and_calibrate(
         shap.summary_plot(shap_vals, features=X, feature_names=feats, max_display=20, show=False)
         plt.tight_layout(); plt.savefig(outdir/"shap_summary.png", bbox_inches="tight"); plt.close()
     except Exception as e:
-        print(f"[WARN] SHAP failed: {e}", file=sys.stderr)
+        print(f"SHAP failed: {e}", file=sys.stderr)
 
     return {"model":"lgbm","features_used":feats,"metrics":metrics,"thresholds":thr,"artifacts_dir":str(outdir.absolute())}
 
 # ---------- CLI ----------
 def parse_args():
-    p = argparse.ArgumentParser(description="Train baseline EWS (LightGBM) + isotonic calibration + SHAP (no HTML)")
+    p = argparse.ArgumentParser(description="Train baseline EWS (LightGBM) + isotonic calibration + SHAP")
     p.add_argument("--features", required=True, type=str, help="Path to features file (.parquet/.csv)")
     p.add_argument("--test-size", default=0.2, type=float)
     p.add_argument("--seed", default=42, type=int)
