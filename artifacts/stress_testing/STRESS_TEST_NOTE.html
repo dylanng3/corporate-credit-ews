@@ -1,0 +1,1244 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.8.25">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>stress_test_note</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="STRESS_TEST_NOTE_files/libs/clipboard/clipboard.min.js"></script>
+<script src="STRESS_TEST_NOTE_files/libs/quarto-html/quarto.js" type="module"></script>
+<script src="STRESS_TEST_NOTE_files/libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="STRESS_TEST_NOTE_files/libs/quarto-html/axe/axe-check.js" type="module"></script>
+<script src="STRESS_TEST_NOTE_files/libs/quarto-html/popper.min.js"></script>
+<script src="STRESS_TEST_NOTE_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="STRESS_TEST_NOTE_files/libs/quarto-html/anchor.min.js"></script>
+<link href="STRESS_TEST_NOTE_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="STRESS_TEST_NOTE_files/libs/quarto-html/quarto-syntax-highlighting-7b89279ff1a6dce999919e0e67d4d9ec.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="STRESS_TEST_NOTE_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="STRESS_TEST_NOTE_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="STRESS_TEST_NOTE_files/libs/bootstrap/bootstrap-9e3ffae467580fdb927a41352e75a2e0.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+</head>
+
+<body class="fullcontent quarto-light">
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
+
+<main class="content" id="quarto-document-content">
+
+
+
+
+<section id="stress-testing-report" class="level1">
+<h1>STRESS TESTING REPORT</h1>
+<p><strong>Corporate Credit Portfolio - Macroeconomic Stress Testing</strong><br>
+<em>Date: October 1, 2025</em></p>
+<hr>
+<section id="executive-summary" class="level2">
+<h2 class="anchored" data-anchor-id="executive-summary">Executive Summary</h2>
+<p>This stress test evaluates the resilience of the corporate credit portfolio under various macroeconomic scenarios. The analysis quantifies potential impacts on NPL formation, provisioning requirements, capital adequacy, and credit income under 6 different stress scenarios.</p>
+<p><strong>Key Findings:</strong></p>
+<ul>
+<li><strong>Severe Recession</strong>: NPL increases by <strong>+$66.9M</strong> (+609%), provisions rise to <strong>$33.4M</strong></li>
+<li><strong>Moderate Recession</strong>: NPL increases by <strong>+$38.7M</strong> (+352%), provisions at <strong>$22.8M</strong></li>
+<li><strong>Interest Rate Shock</strong>: NPL increases by <strong>+$23.3M</strong> (+212%), provisions at <strong>$16.6M</strong></li>
+<li><strong>Base Case</strong>: NPL at <strong>$11.0M</strong>, provisions at <strong>$5.7M</strong></li>
+</ul>
+<hr>
+</section>
+<section id="portfolio-overview" class="level2">
+<h2 class="anchored" data-anchor-id="portfolio-overview">Portfolio Overview</h2>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Metric</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Total Customers</td>
+<td>10,000</td>
+</tr>
+<tr class="even">
+<td>Total EAD</td>
+<td>$1,340.4M</td>
+</tr>
+<tr class="odd">
+<td>Baseline NPL</td>
+<td>$11.0M (0.82% of EAD)</td>
+</tr>
+<tr class="even">
+<td>Average PD (Baseline)</td>
+<td>0.82%</td>
+</tr>
+<tr class="odd">
+<td>Weighted LGD</td>
+<td>~42% (varies by sector/grade)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Sector Breakdown (EAD):</strong></p>
+<ul>
+<li>Manufacturing: $304.7M (23%)</li>
+<li>Construction: $151.2M (11%)</li>
+<li>Transportation: $152.0M (11%)</li>
+<li>Chemicals: $123.9M (9%)</li>
+<li>Logistics: $125.4M (9%)</li>
+<li>Retail: $130.1M (10%)</li>
+<li>Engineering: $118.2M (9%)</li>
+<li>Technology: $82.3M (6%)</li>
+<li>Agriculture: $80.9M (6%)</li>
+<li>Telecommunications: $71.7M (5%)</li>
+</ul>
+<p><strong>Grade Distribution (EAD):</strong></p>
+<ul>
+<li>Grade A: $1,093.6M (82%) - Very Low Risk</li>
+<li>Grade B: $107.9M (8%)</li>
+<li>Grade C: $59.9M (4%)</li>
+<li>Grade D: $28.0M (2%)</li>
+<li>Grade E: $16.2M (1%)</li>
+<li>Grade F: $11.6M (1%)</li>
+<li>Grade G: $23.2M (2%) - Very High Risk</li>
+</ul>
+<p><img src="portfolio_composition.png" class="img-fluid"></p>
+<hr>
+</section>
+<section id="scenarios-tested" class="level2">
+<h2 class="anchored" data-anchor-id="scenarios-tested">Scenarios Tested</h2>
+<p><em>Note: All macro shocks represent changes (Δ) vs.&nbsp;Baseline scenario in percentage points (pp) for rates/unemployment/CPI, and percentage change (%) for GDP.</em></p>
+<section id="mild-recession" class="level3">
+<h3 class="anchored" data-anchor-id="mild-recession">1. <strong>Mild Recession</strong></h3>
+<ul>
+<li>GDP: -2%, Unemployment: +1.5pp, Rates: +0.5pp, CPI: +1pp</li>
+<li><strong>Impact</strong>: NPL +$14.9M (+136%), Provision $12.9M</li>
+</ul>
+</section>
+<section id="moderate-recession" class="level3">
+<h3 class="anchored" data-anchor-id="moderate-recession">2. <strong>Moderate Recession</strong></h3>
+<ul>
+<li>GDP: -4%, Unemployment: +3pp, Rates: +1pp, CPI: +2pp</li>
+<li><strong>Impact</strong>: NPL +$38.7M (+352%), Provision $22.8M</li>
+<li><strong>Capital Impact</strong>: +$4.5M, Credit Income -$22.6M</li>
+</ul>
+</section>
+<section id="severe-recession-2008-style-crisis" class="level3">
+<h3 class="anchored" data-anchor-id="severe-recession-2008-style-crisis">3. <strong>Severe Recession</strong> (2008-style crisis)</h3>
+<ul>
+<li>GDP: -6%, Unemployment: +5pp, Rates: +0pp, CPI: +0.5pp</li>
+<li><strong>Impact</strong>: NPL +$66.9M (+609%), Provision $33.4M</li>
+<li><strong>Capital Impact</strong>: +$6.9M, Credit Income -$36.3M</li>
+</ul>
+</section>
+<section id="stagflation" class="level3">
+<h3 class="anchored" data-anchor-id="stagflation">4. <strong>Stagflation</strong></h3>
+<ul>
+<li>GDP: -1%, Unemployment: +2pp, Rates: +3pp, CPI: +5pp</li>
+<li><strong>Impact</strong>: NPL +$29.8M (+271%), Provision $19.3M</li>
+<li><strong>Capital Impact</strong>: +$3.6M, Credit Income -$18.0M</li>
+</ul>
+</section>
+<section id="interest-rate-shock" class="level3">
+<h3 class="anchored" data-anchor-id="interest-rate-shock">5. <strong>Interest Rate Shock</strong></h3>
+<ul>
+<li>GDP: -1.5%, Unemployment: +1pp, Rates: +4pp, CPI: +3pp</li>
+<li><strong>Impact</strong>: NPL +$23.3M (+212%), Provision $16.6M</li>
+<li><strong>Capital Impact</strong>: +$2.8M, Credit Income -$14.6M</li>
+</ul>
+</section>
+<section id="sector-specific-construction-crisis" class="level3">
+<h3 class="anchored" data-anchor-id="sector-specific-construction-crisis">6. <strong>Sector-Specific (Construction Crisis)</strong></h3>
+<ul>
+<li>GDP: -1%, Unemployment: +1pp, Rates: +1pp, CPI: +0pp</li>
+<li><strong>Sector Overlays</strong>: Construction 2.0× PD uplift (applied on logit scale), Manufacturing 1.2×, Retail 1.1×</li>
+<li><strong>Impact</strong>: NPL +$11.9M (+109%), Provision $11.5M</li>
+<li><strong>Targeted Impact</strong>: Construction sector NPL +$2.9M (baseline $1.4M → stressed $4.3M)</li>
+</ul>
+<hr>
+</section>
+</section>
+<section id="sectoral-analysis-severe-recession" class="level2">
+<h2 class="anchored" data-anchor-id="sectoral-analysis-severe-recession">Sectoral Analysis (Severe Recession)</h2>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 8%">
+<col style="width: 12%">
+<col style="width: 22%">
+<col style="width: 22%">
+<col style="width: 14%">
+<col style="width: 19%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Sector</th>
+<th>EAD ($M)</th>
+<th>NPL Baseline ($M)</th>
+<th>NPL Stressed ($M)</th>
+<th>Δ NPL ($M)</th>
+<th>Provision ($M)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Manufacturing</td>
+<td>304.7</td>
+<td>2.4</td>
+<td>16.6</td>
+<td>+14.1</td>
+<td>6.3</td>
+</tr>
+<tr class="even">
+<td>Construction</td>
+<td>151.2</td>
+<td>1.4</td>
+<td>10.0</td>
+<td>+8.6</td>
+<td>4.3</td>
+</tr>
+<tr class="odd">
+<td>Transportation</td>
+<td>152.0</td>
+<td>1.2</td>
+<td>8.7</td>
+<td>+7.5</td>
+<td>3.7</td>
+</tr>
+<tr class="even">
+<td>Retail</td>
+<td>130.1</td>
+<td>1.3</td>
+<td>8.4</td>
+<td>+7.1</td>
+<td>4.1</td>
+</tr>
+<tr class="odd">
+<td>Logistics</td>
+<td>125.4</td>
+<td>1.0</td>
+<td>7.1</td>
+<td>+6.1</td>
+<td>3.2</td>
+</tr>
+<tr class="even">
+<td>Chemicals</td>
+<td>123.9</td>
+<td>1.1</td>
+<td>7.5</td>
+<td>+6.4</td>
+<td>3.3</td>
+</tr>
+<tr class="odd">
+<td>Engineering</td>
+<td>118.2</td>
+<td>0.8</td>
+<td>7.0</td>
+<td>+6.2</td>
+<td>2.8</td>
+</tr>
+<tr class="even">
+<td>Agriculture</td>
+<td>80.9</td>
+<td>0.7</td>
+<td>4.9</td>
+<td>+4.2</td>
+<td>2.5</td>
+</tr>
+<tr class="odd">
+<td>Technology</td>
+<td>82.3</td>
+<td>0.6</td>
+<td>4.5</td>
+<td>+3.9</td>
+<td>1.8</td>
+</tr>
+<tr class="even">
+<td>Telecommunications</td>
+<td>71.7</td>
+<td>0.5</td>
+<td>3.4</td>
+<td>+2.9</td>
+<td>1.4</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Key Observations:</strong></p>
+<ul>
+<li>Manufacturing and Construction sectors absorb highest absolute losses due to size and sector sensitivity</li>
+<li>All sectors show significant stress but proportional to existing exposure</li>
+<li>Retail and Construction have higher sector betas (+0.10 and +0.12), amplifying PD uplift</li>
+</ul>
+<hr>
+</section>
+<section id="grade-migration-impact-severe-recession" class="level2">
+<h2 class="anchored" data-anchor-id="grade-migration-impact-severe-recession">Grade Migration Impact (Severe Recession)</h2>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 7%">
+<col style="width: 22%">
+<col style="width: 22%">
+<col style="width: 14%">
+<col style="width: 13%">
+<col style="width: 20%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Grade</th>
+<th>Baseline NPL ($M)</th>
+<th>Stressed NPL ($M)</th>
+<th>Δ NPL ($M)</th>
+<th>% Increase</th>
+<th>Share of Total Δ</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>A</td>
+<td>0.8</td>
+<td>14.7</td>
+<td>+14.0</td>
+<td>+1,713%</td>
+<td>21%</td>
+</tr>
+<tr class="even">
+<td>B</td>
+<td>0.8</td>
+<td>13.3</td>
+<td>+12.5</td>
+<td>+1,566%</td>
+<td>19%</td>
+</tr>
+<tr class="odd">
+<td>C</td>
+<td>0.9</td>
+<td>13.7</td>
+<td>+12.8</td>
+<td>+1,459%</td>
+<td>19%</td>
+</tr>
+<tr class="even">
+<td>D</td>
+<td>0.9</td>
+<td>10.7</td>
+<td>+9.9</td>
+<td>+1,155%</td>
+<td>15%</td>
+</tr>
+<tr class="odd">
+<td>E</td>
+<td>1.0</td>
+<td>8.1</td>
+<td>+7.1</td>
+<td>+725%</td>
+<td>11%</td>
+</tr>
+<tr class="even">
+<td>F</td>
+<td>1.3</td>
+<td>5.8</td>
+<td>+4.4</td>
+<td>+330%</td>
+<td>7%</td>
+</tr>
+<tr class="odd">
+<td>G</td>
+<td>5.4</td>
+<td>11.6</td>
+<td>+6.2</td>
+<td>+115%</td>
+<td>9%</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Key Observations:</strong></p>
+<ul>
+<li>Grade A shows massive <strong>percentage increase</strong> (+1,713%) though absolute NPL remains manageable at $14.7M</li>
+<li>Higher-grade portfolio means larger percentage uplift under stress (leverage effect from low baseline)</li>
+<li>Grade G already has high baseline PD, so percentage increase is smaller (+115%)</li>
+<li>Grades A-C contribute <strong>59%</strong> of total NPL increase despite being “investment grade”</li>
+<li>This reflects portfolio composition: 94% of EAD is in Grades A-C</li>
+</ul>
+<hr>
+</section>
+<section id="capital-provision-requirements" class="level2">
+<h2 class="anchored" data-anchor-id="capital-provision-requirements">Capital &amp; Provision Requirements</h2>
+<section id="severe-recession-scenario" class="level3">
+<h3 class="anchored" data-anchor-id="severe-recession-scenario">Severe Recession Scenario</h3>
+<ul>
+<li><strong>Total Provisions Required</strong>: $33.4M (5.9x baseline)</li>
+<li><strong>Capital Buffer Required</strong>: $9.9M (vs $3.0M baseline)</li>
+<li><strong>Credit Income Impact</strong>: -$36.3M (turns negative from +$111.5M baseline)</li>
+<li><strong>Total EL</strong>: $33.4M vs $5.7M baseline</li>
+</ul>
+</section>
+<section id="moderate-recession-scenario" class="level3">
+<h3 class="anchored" data-anchor-id="moderate-recession-scenario">Moderate Recession Scenario</h3>
+<ul>
+<li><strong>Total Provisions</strong>: $22.8M (4.0x baseline)</li>
+<li><strong>Capital Buffer</strong>: $7.5M (+$4.5M vs baseline)</li>
+<li><strong>Credit Income Impact</strong>: -$22.6M</li>
+</ul>
+</section>
+<section id="mild-recession-scenario" class="level3">
+<h3 class="anchored" data-anchor-id="mild-recession-scenario">Mild Recession Scenario</h3>
+<ul>
+<li><strong>Total Provisions</strong>: $12.9M (2.3x baseline)</li>
+<li><strong>Capital Buffer</strong>: $4.9M (+$1.9M)</li>
+<li><strong>Credit Income Impact</strong>: -$9.7M</li>
+</ul>
+</section>
+<section id="break-even-analysis" class="level3">
+<h3 class="anchored" data-anchor-id="break-even-analysis">Break-even Analysis</h3>
+<ul>
+<li>Portfolio can absorb <strong>Mild Recession</strong> with moderate impact</li>
+<li><strong>Moderate Recession</strong> requires significant capital planning (~$17M additional provisions)</li>
+<li><strong>Severe Recession</strong> would require substantial capital injection (~$28M additional provisions)</li>
+</ul>
+<p><strong>Provision Coverage Gap:</strong></p>
+<ul>
+<li>Mild: $7.3M additional needed</li>
+<li>Moderate: $17.2M additional needed<br>
+</li>
+<li>Severe: $27.7M additional needed</li>
+</ul>
+<hr>
+</section>
+</section>
+<section id="methodology" class="level2">
+<h2 class="anchored" data-anchor-id="methodology">Methodology</h2>
+<section id="assumptions-limitations" class="level3">
+<h3 class="anchored" data-anchor-id="assumptions-limitations">Assumptions &amp; Limitations</h3>
+<p><strong>This stress test uses simplified assumptions for demonstration purposes. All parameters below are illustrative and should be replaced with institution-specific values in production.</strong></p>
+<ol type="1">
+<li><strong>Baseline PD</strong>: 12-month calibrated PD from isotonic calibration (Point-in-Time/Through-the-Cycle hybrid), clipped to [1e-6, 0.5] for numerical stability
+<ul>
+<li><em>Note</em>: Demonstrates calibration approach; actual PD should reflect bank’s rating model</li>
+</ul></li>
+<li><strong>Provision Coverage</strong>: 100% of Expected Loss (EL)
+<ul>
+<li><em>Assumption</em>: Full coverage for simplicity in demonstration</li>
+<li><em>Production</em>: Use IFRS 9 ECL model with Stage 1/2/3 differentiation per bank policy</li>
+<li><em>Note</em>: Actual coverage ratios vary by stage and bank-specific provision methodology</li>
+</ul></li>
+<li><strong>Capital Calculation</strong>: 8% × EAD × √(PD × LGD)
+<ul>
+<li><em>Assumption</em>: Simplified proxy for scenario comparison</li>
+<li><em>Production</em>: Use Basel III Foundation IRB (FIRB) or Advanced IRB (AIRB) framework</li>
+<li><em>Limitation</em>: Does not include asset correlation (ρ), maturity adjustment, or regulatory scaling factors</li>
+</ul></li>
+<li><strong>Elasticities &amp; Betas</strong>: Illustrative parameters
+<ul>
+<li>GDP: -0.20, Unemployment: +0.35, Rates: +0.15, CPI: +0.10</li>
+<li><em>Source</em>: Stylized values based on academic literature; not calibrated to specific portfolio</li>
+<li><em>Production</em>: Calibrate via historical regression or econometric models specific to institution</li>
+<li>Sector/Grade betas: Directional estimates; require empirical validation</li>
+</ul></li>
+<li><strong>Traffic Light Thresholds</strong>: Illustrative Risk Appetite Framework (RAF)
+<ul>
+<li>Green/Amber/Orange/Red bands based on ΔCapital and ΔProvisions tolerance</li>
+<li><em>Production</em>: Define thresholds aligned with board-approved RAF and regulatory requirements</li>
+<li><em>Note</em>: Actual thresholds depend on capital base, earnings capacity, and risk tolerance</li>
+</ul></li>
+<li><strong>Scenario Design</strong>: Based on historical patterns (2008 GFC, 2020 COVID)
+<ul>
+<li><em>Units</em>: pp (percentage points) for Unemployment/Rates/CPI; % (percent change) for GDP</li>
+<li><em>Production</em>: Use forward-looking scenarios from central bank, IMF, or internal macro team</li>
+</ul></li>
+</ol>
+<p><strong>Important</strong>: This is a <strong>demonstration model</strong>. Production implementation requires:</p>
+<ul>
+<li>Governance approval (Board Risk Committee, ALCO)</li>
+<li>Model validation and backtesting</li>
+<li>Regulatory alignment (Basel III, IFRS 9, local supervisory standards)</li>
+<li>Quarterly recalibration and independent review</li>
+</ul>
+<hr>
+</section>
+<section id="pd-uplift-model" class="level3">
+<h3 class="anchored" data-anchor-id="pd-uplift-model">PD Uplift Model</h3>
+<p><span class="math display">\[
+\begin{aligned}
+PD_{stressed} = \text{logit}^{-1}\bigg(&amp;\text{logit}(PD_{baseline}) + \beta_{GDP} \times \Delta GDP + \beta_{unemployment} \times \Delta Unemployment \\
+&amp;+ \beta_{rates} \times \Delta Rates + \beta_{CPI} \times \Delta CPI + \beta_{sector} + \beta_{grade}\bigg)
+\end{aligned}
+\]</span></p>
+<p>where:</p>
+<ul>
+<li><span class="math inline">\(\text{logit}(p) = \ln\left(\frac{p}{1-p}\right)\)</span> and <span class="math inline">\(\text{logit}^{-1}(z) = \frac{1}{1+e^{-z}}\)</span></li>
+<li><span class="math inline">\(PD_{baseline}\)</span> is the <strong>12-month calibrated PD</strong> (Point-in-Time/Through-the-Cycle hybrid from isotonic calibration)</li>
+<li>PD is clipped to <span class="math inline">\([10^{-6}, 0.5]\)</span> to ensure numerical stability and economic realism</li>
+<li><span class="math inline">\(\Delta\)</span> represents change in macroeconomic variable vs.&nbsp;baseline (pp for rates/unemployment/CPI; % for GDP)</li>
+<li><span class="math inline">\(\beta\)</span> coefficients represent sensitivity/elasticity to each factor</li>
+</ul>
+<p><strong>Elasticities</strong> <em>(Illustrative values for demonstration)</em>:</p>
+<ul>
+<li>GDP Growth: <strong>-0.20</strong> (negative growth increases PD)</li>
+<li>Unemployment: <strong>+0.35</strong> (unemployment rise increases PD)</li>
+<li>Interest Rates: <strong>+0.15</strong> (rate hikes increase PD)</li>
+<li>CPI Inflation: <strong>+0.10</strong> (high inflation increases PD)</li>
+</ul>
+<p><em>Note</em>: Production models should calibrate elasticities via historical regression on institution-specific data.</p>
+<p><strong>Sector Betas</strong> <em>(Directional estimates; require empirical validation)</em>:</p>
+<ul>
+<li>Construction: +0.12 (most sensitive)</li>
+<li>Retail: +0.10</li>
+<li>Manufacturing: +0.05</li>
+<li>Agriculture: +0.03</li>
+<li>Services/Logistics: 0.00 (baseline)</li>
+</ul>
+<p><strong>Grade Betas</strong> <em>(Stylized values for demonstration)</em>:</p>
+<ul>
+<li>Grade A: -0.10 (most resilient)</li>
+<li>Grade B: -0.05</li>
+<li>Grade C: 0.00 (baseline)</li>
+<li>Grade D: +0.05</li>
+<li>Grade E: +0.10</li>
+<li>Grade F: +0.20</li>
+<li>Grade G: +0.30 (most vulnerable)</li>
+</ul>
+<p><em>Note</em>: Production models should derive betas from historical migration matrices (PD migration during stress periods).</p>
+</section>
+<section id="impact-calculations" class="level3">
+<h3 class="anchored" data-anchor-id="impact-calculations">Impact Calculations</h3>
+<ul>
+<li><strong>NPL Proxy</strong>: <span class="math inline">\(NPL = PD_{stressed} \times EAD\)</span></li>
+<li><strong>Expected Loss (EL)</strong>: <span class="math inline">\(EL = PD \times LGD \times EAD\)</span></li>
+<li><strong>Provision</strong>: <span class="math inline">\(Provision = 100\% \times EL\)</span>
+<ul>
+<li><em>Note</em>: 100% coverage is a <strong>proxy for demonstration only</strong></li>
+<li><em>Production</em>: Use IFRS 9 ECL model with Stage 1 (12-month ECL), Stage 2 (lifetime ECL), Stage 3 (credit-impaired)</li>
+<li><em>Recommendation</em>: Apply bank-specific provision policy and regulatory overlay</li>
+</ul></li>
+<li><strong>Capital</strong>: <span class="math inline">\(Capital = 8\% \times EAD \times \sqrt{PD \times LGD}\)</span>
+<ul>
+<li><em>Note</em>: Simplified <strong>proxy for scenario comparison only</strong></li>
+<li><em>Production</em>: Replace with Basel III Foundation IRB (FIRB) or Advanced IRB (AIRB) approach</li>
+<li><em>Limitation</em>: Does not include asset correlation (ρ), maturity adjustment, or regulatory scaling factors</li>
+<li><em>Example</em>: This is illustrative only; not intended for regulatory capital calculation</li>
+</ul></li>
+<li><strong>Credit Income</strong>: <span class="math inline">\(Income = APR \times EAD \times (1 - PD) - EL\)</span></li>
+</ul>
+</section>
+<section id="sensitivity-impact-of-model-simplifications" class="level3">
+<h3 class="anchored" data-anchor-id="sensitivity-impact-of-model-simplifications">Sensitivity: Impact of Model Simplifications</h3>
+<p><em>Illustrative comparison for Severe Recession scenario:</em></p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 13%">
+<col style="width: 18%">
+<col style="width: 29%">
+<col style="width: 25%">
+<col style="width: 12%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Method</th>
+<th>NPL ($M)</th>
+<th>Provision ($M)</th>
+<th>Capital ($M)</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Current Proxy</strong></td>
+<td>77.9</td>
+<td>33.4</td>
+<td>9.9</td>
+<td>Simplified 8% × √(PD×LGD)</td>
+</tr>
+<tr class="even">
+<td><strong>FIRB (estimated)</strong></td>
+<td>77.9</td>
+<td>33.4</td>
+<td>~12.5</td>
+<td>Includes ρ=0.15, maturity=2.5y</td>
+</tr>
+<tr class="odd">
+<td><strong>IFRS 9 (estimated)</strong></td>
+<td>77.9</td>
+<td>~28.0</td>
+<td>9.9</td>
+<td>Stage differentiation, 85% avg coverage</td>
+</tr>
+</tbody>
+</table>
+<p><em>Conclusion</em>: Capital requirement under FIRB would be ~25% higher; Provisions under IFRS 9 would be ~15% lower than 100% EL proxy.</p>
+<p><em>Note</em>: FIRB and IFRS 9 values are <strong>hypothetical estimates</strong> for illustration only. Actual values require full regulatory models.</p>
+</section>
+<section id="sector-multipliers-construction-crisis-scenario" class="level3">
+<h3 class="anchored" data-anchor-id="sector-multipliers-construction-crisis-scenario">Sector Multipliers (Construction Crisis Scenario)</h3>
+<p><em>Applied on logit scale before inverse transformation to ensure PD bounds are preserved:</em></p>
+<ul>
+<li>Construction: 2.0× uplift (logit space)</li>
+<li>Manufacturing: 1.2× uplift (spillover effect)</li>
+<li>Retail: 1.1× uplift (minor spillover)</li>
+<li>Other sectors: 1.0× (baseline macro shocks only)</li>
+</ul>
+<p><strong>Validation</strong>: Construction baseline NPL $1.4M → stressed $4.3M (+$2.9M targeted impact)</p>
+<hr>
+</section>
+</section>
+<section id="risk-mitigation-recommendations" class="level2">
+<h2 class="anchored" data-anchor-id="risk-mitigation-recommendations">Risk Mitigation Recommendations</h2>
+<section id="immediate-actions-0-3-months" class="level3">
+<h3 class="anchored" data-anchor-id="immediate-actions-0-3-months">Immediate Actions (0-3 months)</h3>
+<ol type="1">
+<li><strong>Increase Provisions</strong>: Build provision buffer to <strong>$35M</strong> to cover moderate-to-severe scenarios</li>
+<li><strong>Enhanced Monitoring</strong>: Implement weekly tracking of early warning signals for:
+<ul>
+<li>Grade D-G borrowers (higher risk segments)</li>
+<li>Construction and Retail sectors (higher sector betas)</li>
+</ul></li>
+<li><strong>Capital Planning</strong>: Secure contingency funding facility of <strong>$30M</strong> for worst-case scenarios</li>
+</ol>
+</section>
+<section id="medium-term-3-12-months" class="level3">
+<h3 class="anchored" data-anchor-id="medium-term-3-12-months">Medium-term (3-12 months)</h3>
+<ol type="1">
+<li><strong>Portfolio Rebalancing</strong>:
+<ul>
+<li>Monitor Grade A-C closely (they hold 94% of EAD and contribute 59% of stress NPL increase)</li>
+<li>Review large exposures in Construction sector</li>
+</ul></li>
+<li><strong>Pricing Adjustment</strong>:
+<ul>
+<li>Update APR pricing to reflect stress-tested risk profiles</li>
+<li>Consider covenant tightening for grades D-G</li>
+</ul></li>
+<li><strong>Collateral Review</strong>:
+<ul>
+<li>Re-evaluate LGD assumptions sector-by-sector</li>
+<li>Improve collateral coverage for high-risk segments</li>
+</ul></li>
+</ol>
+</section>
+<section id="long-term-12-months" class="level3">
+<h3 class="anchored" data-anchor-id="long-term-12-months">Long-term (12+ months)</h3>
+<ol type="1">
+<li><strong>Stress Testing Cadence</strong>: Run quarterly stress tests with updated macroeconomic forecasts</li>
+<li><strong>Dynamic Provisioning</strong>: Implement forward-looking ECL model aligned with IFRS 9</li>
+<li><strong>Capital Planning</strong>: Maintain <strong>12-15% capital buffer</strong> above regulatory minimum</li>
+<li><strong>Scenario Expansion</strong>: Add geopolitical shocks, commodity price shocks, FX crisis scenarios</li>
+</ol>
+<hr>
+</section>
+</section>
+<section id="sensitivity-analysis" class="level2">
+<h2 class="anchored" data-anchor-id="sensitivity-analysis">Sensitivity Analysis</h2>
+<p><strong>PD Uplift Sensitivity</strong> (Severe Recession):</p>
+<ul>
+<li>Elasticity +20%: NPL would increase to ~$85M (+$74M vs baseline)</li>
+<li>Elasticity -20%: NPL would be ~$70M (+$59M vs baseline)</li>
+<li><strong>Range</strong>: $59M to $74M additional NPL depending on calibration</li>
+</ul>
+<p><strong>LGD Sensitivity</strong> (Severe Recession):</p>
+<ul>
+<li>LGD +10pp (from ~42% to 52%): Provision requirement +$8M</li>
+<li>LGD -10pp (from ~42% to 32%): Provision requirement -$8M</li>
+<li><strong>Range</strong>: $25M to $41M total provisions depending on recovery rates</li>
+</ul>
+<p><strong>Sector Concentration Risk</strong>:</p>
+<ul>
+<li>If Manufacturing defaults spike 2x more than model: NPL +$14M additional</li>
+<li>If Construction crisis deeper (3x multiplier): NPL +$8M additional</li>
+</ul>
+<hr>
+</section>
+<section id="waterfall-bridge-baseline-severe-recession" class="level2">
+<h2 class="anchored" data-anchor-id="waterfall-bridge-baseline-severe-recession">Waterfall Bridge: Baseline → Severe Recession</h2>
+<p><em>Decomposition of $66.9M NPL increase by driver (approximate contribution):</em></p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 15%">
+<col style="width: 37%">
+<col style="width: 26%">
+<col style="width: 20%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Driver</th>
+<th>Contribution ($M)</th>
+<th>% of Total Δ</th>
+<th>Mechanism</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Unemployment (+5pp)</strong></td>
+<td>+28.5</td>
+<td>43%</td>
+<td>β = +0.35 (strongest elasticity)</td>
+</tr>
+<tr class="even">
+<td><strong>GDP Decline (-6%)</strong></td>
+<td>+18.0</td>
+<td>27%</td>
+<td>β = -0.20 on negative growth</td>
+</tr>
+<tr class="odd">
+<td><strong>Grade Beta Effect</strong></td>
+<td>+12.0</td>
+<td>18%</td>
+<td>Higher-risk grades amplify stress</td>
+</tr>
+<tr class="even">
+<td><strong>Sector Beta Effect</strong></td>
+<td>+5.4</td>
+<td>8%</td>
+<td>Construction/Retail sensitivity</td>
+</tr>
+<tr class="odd">
+<td><strong>CPI/Rates (+0.5pp)</strong></td>
+<td>+3.0</td>
+<td>4%</td>
+<td>Minor contribution (low shock)</td>
+</tr>
+<tr class="even">
+<td><strong>Total ΔNPL</strong></td>
+<td><strong>+66.9</strong></td>
+<td><strong>100%</strong></td>
+<td>-</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Key Insight</strong>: Unemployment is the dominant driver (43% of impact), followed by GDP contraction (27%). This highlights the importance of labor market health in portfolio resilience.</p>
+<p><img src="waterfall_npl_decomposition.png" class="img-fluid"></p>
+<hr>
+</section>
+<section id="conclusion" class="level2">
+<h2 class="anchored" data-anchor-id="conclusion">Conclusion</h2>
+<p>The stress test reveals <strong>moderate vulnerabilities</strong> in severe downside scenarios, but the portfolio’s high-quality composition (94% in Grades A-C) provides significant resilience.</p>
+<p><strong>Key Takeaways:</strong></p>
+<ol type="1">
+<li><strong>Portfolio Quality is Strength</strong>: 82% of EAD in Grade A creates natural buffer against defaults</li>
+<li><strong>But Also a Risk</strong>: Grade A-C contribute 59% of NPL increase under severe stress due to leverage effect (very low baseline PDs)</li>
+<li><strong>Provision Gap</strong>: Current provisions ($5.7M) insufficient for moderate+ scenarios - need $12M-$28M additional</li>
+<li><strong>Sector Concentration</strong>: Manufacturing (23% EAD) and Construction (11% EAD) are key risk concentrations</li>
+<li><strong>Income Reversal</strong>: Credit income turns negative under Moderate+ scenarios, impacting profitability</li>
+</ol>
+<p><strong>Traffic Light Assessment:</strong></p>
+<p><em>Illustrative Risk Appetite Framework (RAF) for demonstration purposes:</em></p>
+<p><strong>Hypothetical RAF Thresholds:</strong></p>
+<ul>
+<li>🟢 <strong>Green</strong>: ΔCapital &lt; $3M AND ΔProvisions &lt; $10M (within normal risk tolerance)</li>
+<li>🟡 <strong>Amber</strong>: ΔCapital $3M-$6M OR ΔProvisions $10M-$20M (elevated risk, requires active management)</li>
+<li>🟠 <strong>Orange</strong>: ΔCapital $6M-$10M OR ΔProvisions $20M-$30M (high risk, immediate action required)</li>
+<li>🔴 <strong>Red</strong>: ΔCapital &gt; $10M OR ΔProvisions &gt; $30M (critical, breach of risk limits)</li>
+</ul>
+<p><em>Note</em>: Production RAF thresholds must be defined by Board Risk Committee based on capital base, earnings capacity, and regulatory requirements.</p>
+<p><strong>Scenario Results:</strong></p>
+<ul>
+<li>🟢 <strong>Mild Recession</strong>: Within tolerance (ΔCapital: +$1.9M, ΔProvisions: +$7.2M)</li>
+<li>🟡 <strong>Moderate Recession</strong>: Requires proactive capital planning (ΔCapital: +$4.5M, ΔProvisions: +$17.1M)</li>
+<li>🟠 <strong>Severe Recession</strong>: Immediate action required (ΔCapital: +$6.9M, ΔProvisions: +$27.7M)</li>
+<li>🔴 <strong>Extended Severe Stress</strong>: Hypothetical RAF breach — portfolio restructuring and capital injection needed</li>
+</ul>
+<p><strong>Stress vs.&nbsp;Baseline Comparison:</strong></p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Metric</th>
+<th>Baseline</th>
+<th>Mild</th>
+<th>Moderate</th>
+<th>Severe</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>NPL ($M)</td>
+<td>11.0</td>
+<td>25.9</td>
+<td>49.7</td>
+<td>77.9</td>
+</tr>
+<tr class="even">
+<td>Provisions ($M)</td>
+<td>5.7</td>
+<td>12.9</td>
+<td>22.8</td>
+<td>33.4</td>
+</tr>
+<tr class="odd">
+<td>Capital ($M)</td>
+<td>3.0</td>
+<td>4.9</td>
+<td>7.5</td>
+<td>9.9</td>
+</tr>
+<tr class="even">
+<td>Credit Income ($M)</td>
+<td>111.5</td>
+<td>101.8</td>
+<td>88.9</td>
+<td>75.3</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Next Steps:</strong></p>
+<ol type="1">
+<li>Present findings to Credit Committee and Board Risk Committee</li>
+<li>Develop <strong>contingency funding plan</strong> for $30M provision buffer</li>
+<li>Implement <strong>enhanced monitoring</strong> for Construction sector and Grade D-G borrowers</li>
+<li>Update <strong>ICAAP</strong> (Internal Capital Adequacy Assessment) with stress results</li>
+<li>Run <strong>reverse stress test</strong>: identify scenario that would cause capital depletion</li>
+</ol>
+</section>
+</section>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>
