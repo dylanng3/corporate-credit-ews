@@ -1,0 +1,1702 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.8.25">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>pipeline_documentation</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="PIPELINE_DOCUMENTATION_files/libs/clipboard/clipboard.min.js"></script>
+<script src="PIPELINE_DOCUMENTATION_files/libs/quarto-html/quarto.js" type="module"></script>
+<script src="PIPELINE_DOCUMENTATION_files/libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="PIPELINE_DOCUMENTATION_files/libs/quarto-html/axe/axe-check.js" type="module"></script>
+<script src="PIPELINE_DOCUMENTATION_files/libs/quarto-html/popper.min.js"></script>
+<script src="PIPELINE_DOCUMENTATION_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="PIPELINE_DOCUMENTATION_files/libs/quarto-html/anchor.min.js"></script>
+<link href="PIPELINE_DOCUMENTATION_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="PIPELINE_DOCUMENTATION_files/libs/quarto-html/quarto-syntax-highlighting-7b89279ff1a6dce999919e0e67d4d9ec.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="PIPELINE_DOCUMENTATION_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="PIPELINE_DOCUMENTATION_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="PIPELINE_DOCUMENTATION_files/libs/bootstrap/bootstrap-9e3ffae467580fdb927a41352e75a2e0.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+
+
+</head>
+
+<body class="fullcontent quarto-light">
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
+
+<main class="content" id="quarto-document-content">
+
+
+
+
+<section id="ews-pipeline-documentation" class="level1">
+<h1>EWS Pipeline Documentation</h1>
+<section id="corporate-credit-early-warning-system---technical-workflow" class="level2">
+<h2 class="anchored" data-anchor-id="corporate-credit-early-warning-system---technical-workflow">Corporate Credit Early Warning System - Technical Workflow</h2>
+<p><strong>Document Information</strong><br>
+<strong>Project</strong>: Corporate Credit Early Warning System (12-month PD model)<br>
+<strong>Date</strong>: October 1, 2025<br>
+<strong>Purpose</strong>: Technical documentation of end-to-end modeling pipeline</p>
+<hr>
+</section>
+<section id="pipeline-overview" class="level2">
+<h2 class="anchored" data-anchor-id="pipeline-overview">Pipeline Overview</h2>
+<p>The EWS pipeline consists of <strong>7 main stages</strong> from raw data generation to production scoring:</p>
+<pre><code>1. Data Generation (Synthetic)
+   ├─ gen_cohorts.py      → Monthly snapshots (backtest cohorts)
+   ├─ gen_input.py        → Raw tables (financials, credit, cashflow, covenants)
+   └─ gen_portfolio.py    → Scoring portfolio
+
+2. Feature Engineering
+   └─ feature_engineering.py → Financial ratios + behavioral features
+
+3. Model Training
+   └─ train_baseline.py   → LightGBM classifier + SHAP explainability
+
+4. Calibration
+   └─ calibrate.py        → Isotonic regression for probability calibration
+
+5. Scoring
+   └─ scoring.py          → Batch scoring with absolute thresholds
+
+6. Validation &amp; Testing
+   ├─ backtest_monthly.py → Performance over 18 months
+   ├─ calculate_psi.py    → Population Stability Index
+   └─ plot_validation.py  → Validation dashboard
+
+7. Monitoring &amp; Stress Testing
+   ├─ run_monitoring.py   → Production monitoring
+   └─ stress_test.py      → Scenario stress testing</code></pre>
+<hr>
+</section>
+<section id="stage-1-data-generation" class="level2">
+<h2 class="anchored" data-anchor-id="stage-1-data-generation">Stage 1: Data Generation</h2>
+<section id="generate-monthly-cohorts-gen_cohorts.py" class="level3">
+<h3 class="anchored" data-anchor-id="generate-monthly-cohorts-gen_cohorts.py">1.1 Generate Monthly Cohorts (<code>gen_cohorts.py</code>)</h3>
+<p><strong>Purpose</strong>: Create monthly snapshots for backtesting (18 months: Jan 2024 → Jun 2025)</p>
+<p><strong>Inputs</strong>: None (synthetic generation)</p>
+<p><strong>Process</strong>:</p>
+<ol type="1">
+<li>Generate 10,000 customers per month</li>
+<li>Assign sector (10 sectors: Manufacturing, Construction, Retail, etc.)</li>
+<li>Assign credit grade (A–G) with realistic distribution:
+<ul>
+<li>Grade A: 82% (PD = 0.5%)</li>
+<li>Grade B: 8% (PD = 1.0%)</li>
+<li>Grade C–G: 10% (PD = 2–20%)</li>
+</ul></li>
+<li>Apply sector multipliers (Construction × 1.3, Retail × 1.2, Tech × 0.8)</li>
+<li>Add seasonal/temporal shocks (sine wave + linear trend)</li>
+<li>Generate binary labels (default within 6M, 12M)</li>
+</ol>
+<p><strong>Outputs</strong>: - <code>data/processed/backtest_cohorts.parquet</code> (180,000 rows = 18 months × 10,000)</p>
+<p><strong>Key Parameters</strong>:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>start <span class="op">=</span> <span class="st">"2024-01-31"</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>end <span class="op">=</span> <span class="st">"2025-06-30"</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>n_customers <span class="op">=</span> <span class="dv">10</span>,<span class="dv">000</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>seed <span class="op">=</span> <span class="dv">42</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><strong>Sample Output</strong>:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 17%">
+<col style="width: 15%">
+<col style="width: 10%">
+<col style="width: 9%">
+<col style="width: 10%">
+<col style="width: 17%">
+<col style="width: 11%">
+<col style="width: 7%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>customer_id</th>
+<th>as_of_date</th>
+<th>sector</th>
+<th>grade</th>
+<th>pd_12m</th>
+<th>y_event_12m</th>
+<th>ead</th>
+<th>lgd</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>C00001</td>
+<td>2024-01-31</td>
+<td>MFG</td>
+<td>A</td>
+<td>0.0048</td>
+<td>0</td>
+<td>125,000</td>
+<td>0.35</td>
+</tr>
+<tr class="even">
+<td>C00002</td>
+<td>2024-01-31</td>
+<td>CON</td>
+<td>B</td>
+<td>0.0132</td>
+<td>1</td>
+<td>580,000</td>
+<td>0.42</td>
+</tr>
+</tbody>
+</table>
+<hr>
+</section>
+<section id="generate-raw-input-tables-gen_input.py" class="level3">
+<h3 class="anchored" data-anchor-id="generate-raw-input-tables-gen_input.py">1.2 Generate Raw Input Tables (<code>gen_input.py</code>)</h3>
+<p><strong>Purpose</strong>: Generate 5 raw data tables simulating bank systems</p>
+<p><strong>Inputs</strong>: - Configuration: <code>Config</code> dataclass (customers, sectors, time windows) - As-of date: <code>2025-06-30</code> (snapshot date)</p>
+<p><strong>Process</strong>:</p>
+<p><strong>Step 1: Customer Master</strong> - 1,000 customers with sector, size bucket (SME 80%, Corp 20%) - Assign base financials (Revenue, EBITDA, Total Assets, Total Debt)</p>
+<p><strong>Step 2: Financial Statements (Quarterly)</strong> - 12 quarters of historical financials (Q3/2022 → Q2/2025) - Generate income statement &amp; balance sheet items: - Revenue, COGS, Operating Expenses - EBITDA, Interest Expense, Tax - Total Assets, Total Debt, Shareholder Equity - Working Capital, Cash, Inventory - Apply industry-specific patterns</p>
+<p><strong>Step 3: Credit Behavior (Daily)</strong> - 180 days of credit line usage (lookback from as-of date) - Track daily: Limit, Outstanding, Utilization Rate, Days Past Due (DPD) - Simulate realistic payment patterns: - Good customers: DPD = 0–15 days - Risky customers: DPD spikes to 30–90+ days</p>
+<p><strong>Step 4: Cashflow Transactions (Daily)</strong> - 180 days of cash movements - Track: Total Inflow, Total Outflow, Net Cashflow - Detect negative days, volatility</p>
+<p><strong>Step 5: Covenant Monitoring</strong> - Track financial covenants (Debt/EBITDA ≤ 3.5x, ICR ≥ 1.5x) - Daily breach indicators (0/1)</p>
+<p><strong>Step 6: Labels</strong> - Binary outcome: <code>event_h12m</code> (default within 12 months after as-of date) - Label logic: - DPD ≥ 90 days for 30+ consecutive days → Default - Or: Utilization rate &gt; 90% + covenant breach → Bump PD by 20–40%</p>
+<p><strong>Outputs</strong> (5 files): - <code>data/raw/fin_quarterly.parquet</code> (12K rows = 1K customers × 12 quarters) - <code>data/raw/credit_daily.parquet</code> (180K rows = 1K customers × 180 days) - <code>data/raw/cashflow_daily.parquet</code> (180K rows) - <code>data/raw/covenant.parquet</code> (180K rows) - <code>data/raw/labels.parquet</code> (1K rows = 1 label per customer)</p>
+<p><strong>Key Parameters</strong>:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>n_customers <span class="op">=</span> <span class="dv">1</span>,<span class="dv">000</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>n_quarters <span class="op">=</span> <span class="dv">12</span> (financial history)</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>behavior_days <span class="op">=</span> <span class="dv">180</span> (credit behavior window)</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>label_horizon_days <span class="op">=</span> <span class="dv">365</span> (<span class="dv">12</span> months forward)</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>asof_date <span class="op">=</span> <span class="st">"2025-06-30"</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<hr>
+</section>
+<section id="generate-scoring-portfolio-gen_portfolio.py" class="level3">
+<h3 class="anchored" data-anchor-id="generate-scoring-portfolio-gen_portfolio.py">1.3 Generate Scoring Portfolio (<code>gen_portfolio.py</code>)</h3>
+<p><strong>Purpose</strong>: Create current portfolio for production scoring</p>
+<p><strong>Process</strong>: - Similar to <code>gen_input.py</code> but for production snapshot only - Generate customer master + financials + credit behavior at as-of date - No labels (production scoring doesn’t have future outcomes yet)</p>
+<p><strong>Outputs</strong>: - <code>data/processed/portfolio_scored.csv</code> (production customer list)</p>
+<hr>
+</section>
+</section>
+<section id="stage-2-feature-engineering" class="level2">
+<h2 class="anchored" data-anchor-id="stage-2-feature-engineering">Stage 2: Feature Engineering</h2>
+<section id="script-feature_engineering.py" class="level3">
+<h3 class="anchored" data-anchor-id="script-feature_engineering.py">Script: <code>feature_engineering.py</code></h3>
+<p><strong>Purpose</strong>: Transform raw tables into modeling-ready features</p>
+<p><strong>Inputs</strong>:</p>
+<ul>
+<li>5 raw tables from Stage 1.2</li>
+<li>As-of date: <code>2025-06-30</code></li>
+<li>Observation window: 180 days</li>
+</ul>
+<p><strong>Feature Categories</strong> (20+ features total):</p>
+</section>
+<section id="a.-financial-ratios-from-quarterly-statements" class="level3">
+<h3 class="anchored" data-anchor-id="a.-financial-ratios-from-quarterly-statements">A. Financial Ratios (from Quarterly Statements)</h3>
+<p><strong>Leverage Ratios</strong>:</p>
+<ul>
+<li><code>debt_to_ebitda</code> = Total Debt / EBITDA</li>
+<li><code>debt_to_equity</code> = Total Debt / Shareholder Equity</li>
+<li><code>debt_to_assets</code> = Total Debt / Total Assets</li>
+</ul>
+<p><strong>Coverage Ratios</strong>:</p>
+<ul>
+<li><code>interest_coverage</code> = EBITDA / Interest Expense</li>
+<li><code>ebitda_margin</code> = EBITDA / Revenue</li>
+</ul>
+<p><strong>Liquidity Ratios</strong>:</p>
+<ul>
+<li><code>current_ratio</code> = Current Assets / Current Liabilities</li>
+<li><code>cash_to_assets</code> = Cash / Total Assets</li>
+</ul>
+<p><strong>Operational Ratios</strong>:</p>
+<ul>
+<li><code>asset_turnover</code> = Revenue / Total Assets</li>
+<li><code>working_capital_to_revenue</code> = Working Capital / Revenue</li>
+</ul>
+<p><strong>Growth Indicators</strong>:</p>
+<ul>
+<li><code>revenue_growth_qoq</code> = (Revenue_Q0 - Revenue_Q1) / Revenue_Q1</li>
+<li><code>ebitda_growth_qoq</code> = (EBITDA_Q0 - EBITDA_Q1) / EBITDA_Q1</li>
+</ul>
+</section>
+<section id="b.-credit-behavior-from-daily-credit-data" class="level3">
+<h3 class="anchored" data-anchor-id="b.-credit-behavior-from-daily-credit-data">B. Credit Behavior (from Daily Credit Data)</h3>
+<p><strong>Utilization Metrics</strong> (180-day window):</p>
+<ul>
+<li><code>util_mean</code> = Average utilization rate</li>
+<li><code>util_max</code> = Peak utilization</li>
+<li><code>util_p95</code> = 95th percentile utilization</li>
+<li><code>util_days_above_80</code> = # days with utilization &gt; 80%</li>
+</ul>
+<p><strong>Delinquency Metrics</strong>:</p>
+<ul>
+<li><code>dpd_mean</code> = Average days past due</li>
+<li><code>dpd_max</code> = Maximum DPD in window</li>
+<li><code>dpd_days_above_30</code> = # days with DPD &gt; 30</li>
+<li><code>dpd_max_streak</code> = Longest consecutive days with DPD ≥ 30</li>
+</ul>
+</section>
+<section id="c.-cashflow-indicators-from-daily-cashflow" class="level3">
+<h3 class="anchored" data-anchor-id="c.-cashflow-indicators-from-daily-cashflow">C. Cashflow Indicators (from Daily Cashflow)</h3>
+<ul>
+<li><code>cf_net_mean</code> = Average daily net cashflow</li>
+<li><code>cf_negative_days</code> = # days with negative cashflow</li>
+<li><code>cf_volatility</code> = Std dev of daily net cashflow</li>
+</ul>
+</section>
+<section id="d.-covenant-breaches" class="level3">
+<h3 class="anchored" data-anchor-id="d.-covenant-breaches">D. Covenant Breaches</h3>
+<ul>
+<li><code>cov_breach_days</code> = # days with covenant violation in 180-day window</li>
+</ul>
+</section>
+<section id="e.-sector-size-normalization" class="level3">
+<h3 class="anchored" data-anchor-id="e.-sector-size-normalization">E. Sector &amp; Size Normalization</h3>
+<p><strong>Z-score by (Sector, Size)</strong>:</p>
+<ul>
+<li>For each numeric ratio, compute robust z-score:
+<ul>
+<li><code>feature__zs_sector_size</code> = (value - median) / IQR</li>
+<li>Grouped by (sector_code, size_bucket)</li>
+<li>Uses median &amp; IQR instead of mean/std for outlier robustness</li>
+</ul></li>
+</ul>
+<p><strong>Process Flow</strong>:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fl">1.</span> Load <span class="dv">5</span> raw tables</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="fl">2.</span> Filter data to observation window (as_of_date <span class="op">-</span> <span class="dv">180</span> days → as_of_date)</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="fl">3.</span> Compute financial ratios (TTM <span class="op">=</span> trailing <span class="dv">12</span> months)</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="fl">4.</span> Aggregate credit behavior (mean, <span class="bu">max</span>, percentiles over <span class="dv">180</span> days)</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="fl">5.</span> Aggregate cashflow metrics</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="fl">6.</span> Count covenant breaches</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="fl">7.</span> Normalize by sector <span class="op">&amp;</span> size (z<span class="op">-</span>scores)</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="fl">8.</span> Join <span class="bu">all</span> features <span class="cf">with</span> labels</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a><span class="fl">9.</span> Drop missing values</span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a><span class="fl">10.</span> Save <span class="im">as</span> modeling dataset</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><strong>Outputs</strong>: - <code>data/processed/model_features.parquet</code> (1 row per customer, 20+ feature columns)</p>
+<p><strong>Sample Row</strong>:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 16%">
+<col style="width: 20%">
+<col style="width: 23%">
+<col style="width: 13%">
+<col style="width: 11%">
+<col style="width: 15%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>customer_id</th>
+<th>debt_to_ebitda</th>
+<th>interest_coverage</th>
+<th>util_mean</th>
+<th>dpd_max</th>
+<th>event_h12m</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>C00001</td>
+<td>2.3</td>
+<td>4.5</td>
+<td>0.45</td>
+<td>0</td>
+<td>0</td>
+</tr>
+<tr class="even">
+<td>C00002</td>
+<td>5.8</td>
+<td>1.2</td>
+<td>0.87</td>
+<td>45</td>
+<td>1</td>
+</tr>
+</tbody>
+</table>
+<hr>
+</section>
+</section>
+<section id="stage-3-model-training" class="level2">
+<h2 class="anchored" data-anchor-id="stage-3-model-training">Stage 3: Model Training</h2>
+<section id="script-train_baseline.py" class="level3">
+<h3 class="anchored" data-anchor-id="script-train_baseline.py">Script: <code>train_baseline.py</code></h3>
+<p><strong>Purpose</strong>: Train LightGBM classifier with calibration &amp; explainability</p>
+<p><strong>Inputs</strong>: - <code>data/processed/model_features.parquet</code> - Target: <code>event_h12m</code> (binary: 0 = no default, 1 = default)</p>
+<p><strong>Process</strong>:</p>
+</section>
+<section id="step-1-feature-selection" class="level3">
+<h3 class="anchored" data-anchor-id="step-1-feature-selection">Step 1: Feature Selection</h3>
+<ul>
+<li>Auto-select normalized features: <code>*__zs_sector_size</code> (prioritize z-scored features)</li>
+<li>If &lt; 5 z-scored features available, use all numeric columns</li>
+<li>Drop: <code>customer_id</code>, <code>sector_code</code>, <code>size_bucket</code>, <code>event_h12m</code></li>
+</ul>
+</section>
+<section id="step-2-train-test-split" class="level3">
+<h3 class="anchored" data-anchor-id="step-2-train-test-split">Step 2: Train-Test Split</h3>
+<ul>
+<li>Split: 80% train, 20% test</li>
+<li>Stratified by target (maintain default rate balance)</li>
+<li>Random seed = 42 (reproducible)</li>
+</ul>
+</section>
+<section id="step-3-train-base-model-lightgbm" class="level3">
+<h3 class="anchored" data-anchor-id="step-3-train-base-model-lightgbm">Step 3: Train Base Model (LightGBM)</h3>
+<p><strong>Hyperparameters</strong>:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>objective <span class="op">=</span> <span class="st">"binary"</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>metric <span class="op">=</span> <span class="st">"auc"</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>num_leaves <span class="op">=</span> <span class="dv">31</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>learning_rate <span class="op">=</span> <span class="fl">0.05</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>n_estimators <span class="op">=</span> <span class="dv">500</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>min_child_samples <span class="op">=</span> <span class="dv">20</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>feature_fraction <span class="op">=</span> <span class="fl">0.8</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>bagging_fraction <span class="op">=</span> <span class="fl">0.8</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>bagging_freq <span class="op">=</span> <span class="dv">5</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>early_stopping_rounds <span class="op">=</span> <span class="dv">50</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><strong>Training</strong>:</p>
+<ul>
+<li>Fit on train set with validation monitoring</li>
+<li>Early stopping if AUC doesn’t improve for 50 rounds</li>
+<li>Save best iteration</li>
+</ul>
+</section>
+<section id="step-4-probability-calibration" class="level3">
+<h3 class="anchored" data-anchor-id="step-4-probability-calibration">Step 4: Probability Calibration</h3>
+<ul>
+<li>Method: <strong>Platt Scaling</strong> (sklearn <code>CalibratedClassifierCV</code>)</li>
+<li>Calibrator: Sigmoid (logistic regression on LightGBM outputs)</li>
+<li>CV: 5-fold cross-validation on train set</li>
+<li>Purpose: Convert raw model scores → well-calibrated probabilities</li>
+</ul>
+</section>
+<section id="step-5-shap-explainability" class="level3">
+<h3 class="anchored" data-anchor-id="step-5-shap-explainability">Step 5: SHAP Explainability</h3>
+<ul>
+<li>Compute <strong>SHAP TreeExplainer</strong> on test set (sample 100 customers)</li>
+<li>Generate global feature importance (mean |SHAP|)</li>
+<li>Save SHAP values for top 3 drivers per customer</li>
+</ul>
+</section>
+<section id="step-6-evaluate-metrics-test-set" class="level3">
+<h3 class="anchored" data-anchor-id="step-6-evaluate-metrics-test-set">Step 6: Evaluate Metrics (Test Set)</h3>
+<ul>
+<li><strong>AUC-ROC</strong>: Discrimination ability (target &gt; 80%)</li>
+<li><strong>KS Statistic</strong>: Max separation (TPR - FPR)</li>
+<li><strong>Brier Score</strong>: Calibration error (target &lt; 2%)</li>
+<li><strong>Precision-Recall AUC</strong>: Performance on imbalanced data</li>
+</ul>
+</section>
+<section id="step-7-define-thresholds" class="level3">
+<h3 class="anchored" data-anchor-id="step-7-define-thresholds">Step 7: Define Thresholds</h3>
+<ul>
+<li><strong>Red</strong>: Top 5% highest risk (Red ≥ 95th percentile)</li>
+<li><strong>Amber</strong>: Top 10% total (Amber ≥ 90th percentile, excluding Red)</li>
+</ul>
+<p><strong>Outputs</strong>:</p>
+<ul>
+<li><code>artifacts/models/lgb_model.pkl</code> (trained LightGBM)</li>
+<li><code>artifacts/models/calibrator.pkl</code> (Platt scaler)</li>
+<li><code>artifacts/models/feature_names.json</code> (feature list)</li>
+<li><code>artifacts/models/thresholds.json</code> (Red/Amber cutoffs)</li>
+<li><code>artifacts/models/baseline_metrics.json</code> (AUC, KS, Brier)</li>
+<li><code>artifacts/shap/shap_summary.csv</code> (feature importance)</li>
+</ul>
+<p><strong>Sample Metrics</strong>:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode json code-with-copy"><code class="sourceCode json"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"AUC"</span><span class="fu">:</span> <span class="fl">0.925</span><span class="fu">,</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"KS"</span><span class="fu">:</span> <span class="fl">0.783</span><span class="fu">,</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"Brier"</span><span class="fu">:</span> <span class="fl">0.0196</span><span class="fu">,</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"PR_AUC"</span><span class="fu">:</span> <span class="fl">0.161</span><span class="fu">,</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"test_default_rate"</span><span class="fu">:</span> <span class="fl">0.0137</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<hr>
+</section>
+</section>
+<section id="stage-4-calibration" class="level2">
+<h2 class="anchored" data-anchor-id="stage-4-calibration">Stage 4: Calibration</h2>
+<section id="script-calibrate.py" class="level3">
+<h3 class="anchored" data-anchor-id="script-calibrate.py">Script: <code>calibrate.py</code></h3>
+<p><strong>Purpose</strong>: Apply isotonic regression for better probability calibration</p>
+<p><strong>Inputs</strong>:</p>
+<ul>
+<li><code>data/processed/scores_raw.csv</code> (raw model scores from Stage 3)</li>
+<li>Target: <code>event_h12m</code></li>
+</ul>
+<p><strong>Process</strong>:</p>
+</section>
+<section id="isotonic-regression" class="level3">
+<h3 class="anchored" data-anchor-id="isotonic-regression">Isotonic Regression</h3>
+<ul>
+<li>Fit: <code>IsotonicRegression(out_of_bounds="clip")</code></li>
+<li>Input: Raw model score (0–1)</li>
+<li>Output: Calibrated probability (0–1)</li>
+<li>Constraint: Monotonic (higher score → higher probability)</li>
+</ul>
+</section>
+<section id="threshold-mapping" class="level3">
+<h3 class="anchored" data-anchor-id="threshold-mapping">Threshold Mapping</h3>
+<p><strong>Two strategies available:</strong></p>
+<section id="strategy-1-percentile-based-default-from-train_baseline.py" class="level4">
+<h4 class="anchored" data-anchor-id="strategy-1-percentile-based-default-from-train_baseline.py">Strategy 1: Percentile-Based (Default from train_baseline.py)</h4>
+<ul>
+<li><strong>Method</strong>: Top 5% highest risk = Red, Top 10% total = Amber</li>
+<li><strong>Red</strong>: PD ≥ 16.07% (95th percentile cutoff)</li>
+<li><strong>Amber</strong>: PD ≥ 3.24% (90th percentile cutoff)<br>
+</li>
+<li><strong>Green</strong>: PD &lt; 3.24%</li>
+<li><strong>Advantage</strong>: Consistent alert volumes regardless of portfolio risk level</li>
+<li><strong>Use when</strong>: Alert capacity is fixed (e.g., 500 analysts can handle 5% of portfolio)</li>
+</ul>
+</section>
+<section id="strategy-2-absolute-pd-optional-from-calibrate.py" class="level4">
+<h4 class="anchored" data-anchor-id="strategy-2-absolute-pd-optional-from-calibrate.py">Strategy 2: Absolute PD (Optional from calibrate.py)</h4>
+<ul>
+<li><strong>Method</strong>: Fixed PD thresholds</li>
+<li><strong>Red</strong>: PD ≥ 20.0% (absolute cutoff)</li>
+<li><strong>Amber</strong>: PD ≥ 5.0%</li>
+<li><strong>Green</strong>: PD &lt; 5.0%</li>
+<li><strong>Advantage</strong>: Aligned with risk appetite, consistent with regulatory PD definitions</li>
+<li><strong>Use when</strong>: Business has specific risk tolerance (e.g., “PD &gt; 20% = unacceptable”)</li>
+</ul>
+<p><strong>Current deployment</strong>: Uses <strong>Strategy 1 (Percentile)</strong> from <code>train_baseline.py</code></p>
+</section>
+</section>
+<section id="ews-score-0100" class="level3">
+<h3 class="anchored" data-anchor-id="ews-score-0100">EWS Score (0–100)</h3>
+<ul>
+<li>Linear scaling: <code>score = prob_calibrated × 100</code></li>
+<li><strong>Percentile mode</strong>: Red 16–100, Amber 3–16, Green 0–3</li>
+<li><strong>Absolute mode</strong>: Red 20–100, Amber 5–20, Green 0–5</li>
+</ul>
+<p><strong>Outputs</strong>:</p>
+<ul>
+<li><code>artifacts/calibration/calibrator_isotonic.pkl</code> (isotonic model)</li>
+<li><code>artifacts/calibration/thresholds.json</code> (absolute thresholds)</li>
+<li><code>artifacts/calibration/mapping.csv</code> (raw score → calibrated PD)</li>
+<li><code>data/processed/scores_calibrated.csv</code> (with tier assignments)</li>
+</ul>
+<p><strong>Sample Output</strong>:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>customer_id</th>
+<th>score_raw</th>
+<th>prob_calibrated</th>
+<th>score_ews</th>
+<th>tier</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>C00001</td>
+<td>0.0048</td>
+<td>0.0052</td>
+<td>5.2</td>
+<td>Green</td>
+</tr>
+<tr class="even">
+<td>C00002</td>
+<td>0.0654</td>
+<td>0.0712</td>
+<td>71.2</td>
+<td>Red</td>
+</tr>
+</tbody>
+</table>
+<hr>
+</section>
+</section>
+<section id="stage-5-batch-scoring" class="level2">
+<h2 class="anchored" data-anchor-id="stage-5-batch-scoring">Stage 5: Batch Scoring</h2>
+<section id="script-scoring.py" class="level3">
+<h3 class="anchored" data-anchor-id="script-scoring.py">Script: <code>scoring.py</code></h3>
+<p><strong>Purpose</strong>: Score production portfolio (customers without labels)</p>
+<p><strong>Inputs</strong>:</p>
+<ul>
+<li><code>data/processed/model_features.parquet</code> (production features)</li>
+<li><code>artifacts/models/lgb_model.pkl</code></li>
+<li><code>artifacts/models/calibrator.pkl</code></li>
+<li><code>artifacts/calibration/thresholds.json</code></li>
+</ul>
+<p><strong>Process</strong>:</p>
+<ol type="1">
+<li>Load production customer features</li>
+<li>Apply trained model → raw score</li>
+<li>Apply calibrator → calibrated PD</li>
+<li>Compute EWS score (0–100)</li>
+<li>Assign tier (Red/Amber/Green) based on absolute thresholds</li>
+<li>Map action recommendations:
+<ul>
+<li><strong>Green</strong>: Routine monitoring, update financials on schedule</li>
+<li><strong>Amber</strong>: RM review ≤10 days, request management accounts, limit increases frozen</li>
+<li><strong>Red</strong>: Customer meeting ≤5 days, 13-week cashflow plan, watchlist, covenant tightening</li>
+</ul></li>
+</ol>
+<p><strong>Outputs</strong>:</p>
+<ul>
+<li><code>artifacts/scoring/ews_scored_2025-06-30.csv</code>
+<ul>
+<li>Columns: <code>customer_id</code>, <code>prob_default_12m</code>, <code>score_ews</code>, <code>tier</code>, <code>action</code></li>
+</ul></li>
+<li><code>artifacts/scoring/thresholds_used.json</code> (for audit trail)</li>
+</ul>
+<p><strong>Sample Output</strong>:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 12%">
+<col style="width: 16%">
+<col style="width: 10%">
+<col style="width: 6%">
+<col style="width: 53%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>customer_id</th>
+<th>prob_default_12m</th>
+<th>score_ews</th>
+<th>tier</th>
+<th>action</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>C00001</td>
+<td>0.52%</td>
+<td>5.2</td>
+<td>Green</td>
+<td>Theo dõi định kỳ; cập nhật BCTC đúng hạn.</td>
+</tr>
+<tr class="even">
+<td>C00125</td>
+<td>3.8%</td>
+<td>38.0</td>
+<td>Amber</td>
+<td>Soát xét RM ≤10 ngày; yêu cầu management accounts.</td>
+</tr>
+<tr class="odd">
+<td>C00847</td>
+<td>12.5%</td>
+<td>125</td>
+<td>Red</td>
+<td>Họp KH ≤5 ngày; lập kế hoạch dòng tiền 13 tuần.</td>
+</tr>
+</tbody>
+</table>
+<hr>
+</section>
+</section>
+<section id="stage-6-validation-backtesting" class="level2">
+<h2 class="anchored" data-anchor-id="stage-6-validation-backtesting">Stage 6: Validation &amp; Backtesting</h2>
+<section id="monthly-backtest-backtest_monthly.py" class="level3">
+<h3 class="anchored" data-anchor-id="monthly-backtest-backtest_monthly.py">6.1 Monthly Backtest (<code>backtest_monthly.py</code>)</h3>
+<p><strong>Purpose</strong>: Test model performance over 18 months (Jan 2024 → Jun 2025)</p>
+<p><strong>Inputs</strong>:</p>
+<ul>
+<li><code>data/processed/backtest_cohorts.parquet</code> (180K rows)</li>
+<li>Trained model + calibrator</li>
+</ul>
+<p><strong>Process</strong>:</p>
+<ol type="1">
+<li>For each month (18 iterations):
+<ul>
+<li>Filter cohort (10,000 customers)</li>
+<li>Apply model → predict PD</li>
+<li>Apply calibrator → calibrated PD</li>
+<li>Assign tier (Red/Amber/Green)</li>
+<li>Compare with actual labels (<code>y_event_12m</code>)</li>
+<li>Compute metrics: AUC, KS, Brier, Precision, Recall</li>
+</ul></li>
+<li>Aggregate monthly metrics</li>
+</ol>
+<p><strong>Outputs</strong>:</p>
+<ul>
+<li><code>artifacts/backtest/monthly_metrics.csv</code> (18 rows)
+<ul>
+<li>Columns: <code>as_of_month</code>, <code>auc</code>, <code>ks</code>, <code>brier</code>, <code>precision</code>, <code>recall</code>, <code>amber_alert_rate</code>, <code>red_alert_rate</code></li>
+</ul></li>
+</ul>
+<p><strong>Sample Output</strong>:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 14%">
+<col style="width: 7%">
+<col style="width: 7%">
+<col style="width: 9%">
+<col style="width: 12%">
+<col style="width: 9%">
+<col style="width: 20%">
+<col style="width: 18%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>as_of_month</th>
+<th>auc</th>
+<th>ks</th>
+<th>brier</th>
+<th>precision</th>
+<th>recall</th>
+<th>amber_alert_rate</th>
+<th>red_alert_rate</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>2024-01-31</td>
+<td>0.834</td>
+<td>0.601</td>
+<td>0.0106</td>
+<td>0.096</td>
+<td>0.575</td>
+<td>8.3%</td>
+<td>4.2%</td>
+</tr>
+<tr class="even">
+<td>2024-02-29</td>
+<td>0.819</td>
+<td>0.582</td>
+<td>0.0144</td>
+<td>0.092</td>
+<td>0.568</td>
+<td>8.5%</td>
+<td>4.3%</td>
+</tr>
+</tbody>
+</table>
+<hr>
+</section>
+<section id="population-stability-index-calculate_psi.py" class="level3">
+<h3 class="anchored" data-anchor-id="population-stability-index-calculate_psi.py">6.2 Population Stability Index (<code>calculate_psi.py</code>)</h3>
+<p><strong>Purpose</strong>: Measure data drift across 18 months</p>
+<p><strong>Process</strong>:</p>
+<ol type="1">
+<li>Bucket scores into 10 deciles (baseline = first month)</li>
+<li>For each subsequent month:
+<ul>
+<li>Compute distribution across same deciles</li>
+<li>PSI = Σ (actual% - expected%) × ln(actual% / expected%)</li>
+</ul></li>
+<li>PSI &gt; 0.10 → Warning (data shifting)</li>
+<li>PSI &gt; 0.25 → Critical (recalibration needed)</li>
+</ol>
+<p><strong>Outputs</strong>:</p>
+<ul>
+<li><code>artifacts/backtest/psi_monthly.csv</code> (17 rows, one per month vs.&nbsp;baseline)</li>
+</ul>
+<p><strong>Sample</strong>:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>month</th>
+<th>psi</th>
+<th>status</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>2024-02-29</td>
+<td>0.002</td>
+<td>OK</td>
+</tr>
+<tr class="even">
+<td>2024-03-31</td>
+<td>0.005</td>
+<td>OK</td>
+</tr>
+<tr class="odd">
+<td>2025-06-30</td>
+<td>0.000</td>
+<td>OK (synthetic → perfect stability)</td>
+</tr>
+</tbody>
+</table>
+<hr>
+</section>
+<section id="validation-dashboard-plot_validation.py" class="level3">
+<h3 class="anchored" data-anchor-id="validation-dashboard-plot_validation.py">6.3 Validation Dashboard (<code>plot_validation.py</code>)</h3>
+<p><strong>Purpose</strong>: Generate visual validation report</p>
+<p><strong>Plots Generated</strong> (5 total):</p>
+<ol type="1">
+<li><strong>AUC &amp; KS Trend Over Time</strong> (<code>auc_ks_trend.png</code>)
+<ul>
+<li>Line charts: 18-month AUC &amp; KS scores</li>
+<li>Reference line: AUC = 75% (minimum threshold)</li>
+</ul></li>
+<li><strong>Decile Calibration</strong> (<code>decile_calibration.png</code>)
+<ul>
+<li>Bar chart: Predicted vs.&nbsp;Actual default rate by decile</li>
+<li>Error bars: ±1 std dev</li>
+</ul></li>
+<li><strong>Precision-Recall Curve</strong> (<code>precision_recall_curve.png</code>)
+<ul>
+<li>Curve showing trade-off between precision &amp; recall</li>
+<li>Markers: Selected thresholds (Amber, Red)</li>
+</ul></li>
+<li><strong>Alert Volume vs Threshold</strong> (<code>alert_volume_vs_threshold.png</code>)
+<ul>
+<li>Sweep chart: Alert rate from 0.5% to 10% threshold</li>
+<li>Dual axis: Precision &amp; Recall</li>
+</ul></li>
+<li><strong>Validation Dashboard</strong> (<code>validation_dashboard.png</code>)
+<ul>
+<li>2×2 layout combining: AUC/KS trend, Calibration, Threshold analysis, Summary metrics</li>
+</ul></li>
+</ol>
+<p><strong>Outputs</strong>:</p>
+<ul>
+<li><code>artifacts/validation/plots/*.png</code> (5 files)</li>
+<li><code>artifacts/validation/VALIDATION_REPORT_EN.md</code> (integrated report with plots)</li>
+</ul>
+<hr>
+</section>
+</section>
+<section id="stage-7-monitoring-stress-testing" class="level2">
+<h2 class="anchored" data-anchor-id="stage-7-monitoring-stress-testing">Stage 7: Monitoring &amp; Stress Testing</h2>
+<section id="production-monitoring-run_monitoring.py" class="level3">
+<h3 class="anchored" data-anchor-id="production-monitoring-run_monitoring.py">7.1 Production Monitoring (<code>run_monitoring.py</code>)</h3>
+<p><strong>Purpose</strong>: Monthly tracking of production performance</p>
+<p><strong>Inputs</strong>:</p>
+<ul>
+<li>Current month’s predictions + actuals (after 12 months maturity)</li>
+<li>Historical baseline metrics</li>
+</ul>
+<p><strong>Metrics Tracked</strong>:</p>
+<ol type="1">
+<li><strong>PSI</strong> (data drift)</li>
+<li><strong>AUC</strong> (discrimination)</li>
+<li><strong>Brier</strong> (calibration)</li>
+<li><strong>Alert Rate</strong> (operational load)</li>
+<li><strong>Actual Precision</strong> (after labels available)</li>
+</ol>
+<p><strong>Alerts</strong>:</p>
+<ul>
+<li>PSI &gt; 0.10 → Email warning</li>
+<li>AUC &lt; 75% for 2 months → Recalibration trigger</li>
+<li>Alert rate &gt; 15% → Threshold adjustment</li>
+</ul>
+<p><strong>Outputs</strong>:</p>
+<ul>
+<li><code>artifacts/monitoring/monitoring_YYYYMMDD_HHMMSS.json</code> (timestamped)</li>
+<li><code>artifacts/monitoring/monitoring_metrics.csv</code> (cumulative)</li>
+</ul>
+<hr>
+</section>
+<section id="stress-testing-stress_test.py" class="level3">
+<h3 class="anchored" data-anchor-id="stress-testing-stress_test.py">7.2 Stress Testing (<code>stress_test.py</code>)</h3>
+<p><strong>Purpose</strong>: Test model under crisis scenarios</p>
+<p><strong>Scenarios</strong> (from <code>stress_scenarios.yaml</code>):</p>
+<ol type="1">
+<li><strong>Baseline</strong>: Current conditions (no shock)</li>
+<li><strong>Mild Recession</strong>: Revenue -15%, Debt +10%</li>
+<li><strong>Severe Recession</strong>: Revenue -30%, Debt +25%, Liquidity -20%</li>
+<li><strong>Sector Shock</strong>: Construction sector EBITDA -40%</li>
+<li><strong>Liquidity Crisis</strong>: Utilization +30pp, Cashflow volatility ×3</li>
+</ol>
+<p><strong>Process</strong>:</p>
+<ol type="1">
+<li>Load base features</li>
+<li>Apply scenario shocks to features</li>
+<li>Re-score with model</li>
+<li>Compare tier migrations (Green → Amber → Red)</li>
+</ol>
+<p><strong>Outputs</strong>:</p>
+<ul>
+<li><code>artifacts/stress_testing/stress_results.csv</code>
+<ul>
+<li>Columns: <code>scenario</code>, <code>baseline_red%</code>, <code>stressed_red%</code>, <code>migration_rate</code></li>
+</ul></li>
+<li><code>artifacts/stress_testing/STRESS_TEST_NOTE.md</code> (report with waterfall charts)</li>
+</ul>
+<p><strong>Sample Result</strong>:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Scenario</th>
+<th>Baseline Red%</th>
+<th>Stressed Red%</th>
+<th>Migration</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Mild Recession</td>
+<td>4.2%</td>
+<td>7.8%</td>
+<td>+85%</td>
+</tr>
+<tr class="even">
+<td>Severe Recession</td>
+<td>4.2%</td>
+<td>15.3%</td>
+<td>+264%</td>
+</tr>
+</tbody>
+</table>
+<hr>
+</section>
+</section>
+<section id="data-flow-diagram" class="level2">
+<h2 class="anchored" data-anchor-id="data-flow-diagram">Data Flow Diagram</h2>
+<pre><code>┌─────────────────────────────────────────────────────────────────┐
+│ Stage 1: Data Generation                                        │
+│ ┌─────────────┐  ┌──────────────┐  ┌───────────────┐          │
+│ │gen_cohorts  │  │ gen_input    │  │gen_portfolio  │          │
+│ │(backtest)   │  │ (5 raw tables│  │(production)   │          │
+│ └──────┬──────┘  └──────┬───────┘  └───────┬───────┘          │
+└────────┼─────────────────┼───────────────────┼──────────────────┘
+         │                 │                   │
+         v                 v                   v
+    backtest_cohorts   raw/*.parquet   portfolio_scored.csv
+         │                 │                   │
+         └────────┬────────┴───────────────────┘
+                  v
+┌─────────────────────────────────────────────────────────────────┐
+│ Stage 2: Feature Engineering                                    │
+│ ┌───────────────────────────────────────────────────┐          │
+│ │ feature_engineering.py                            │          │
+│ │ • Compute 20+ features (ratios, behavior, CF)     │          │
+│ │ • Z-score normalization by sector/size           │          │
+│ └───────────────────────┬───────────────────────────┘          │
+└─────────────────────────┼───────────────────────────────────────┘
+                          v
+                 model_features.parquet
+                          │
+         ┌────────────────┼────────────────┐
+         v                v                v
+    (train set)      (test set)      (production set)
+         │                │                │
+         v                v                │
+┌─────────────────────────────────────────┼───────────────────────┐
+│ Stage 3: Model Training                 │                       │
+│ ┌──────────────────────────┐            │                       │
+│ │ train_baseline.py        │            │                       │
+│ │ • LightGBM + Platt       │            │                       │
+│ │ • SHAP explainability    │            │                       │
+│ └───────┬──────────────────┘            │                       │
+└─────────┼───────────────────────────────┼───────────────────────┘
+          v                               │
+    lgb_model.pkl                         │
+    calibrator.pkl                        │
+    thresholds.json                       │
+          │                               │
+          v                               │
+┌─────────────────────────────────────────┼───────────────────────┐
+│ Stage 4: Calibration                    │                       │
+│ ┌──────────────────────────┐            │                       │
+│ │ calibrate.py             │            │                       │
+│ │ • Isotonic regression    │            │                       │
+│ │ • Absolute thresholds    │            │                       │
+│ └───────┬──────────────────┘            │                       │
+└─────────┼───────────────────────────────┼───────────────────────┘
+          v                               │
+    calibrator_isotonic.pkl               │
+    scores_calibrated.csv                 │
+          │                               │
+          └───────────────┬───────────────┘
+                          v
+┌─────────────────────────────────────────────────────────────────┐
+│ Stage 5: Scoring                                                │
+│ ┌───────────────────────────────────────────────────┐          │
+│ │ scoring.py                                        │          │
+│ │ • Batch prediction                                │          │
+│ │ • Tier assignment (Red/Amber/Green)               │          │
+│ │ • Action recommendations                          │          │
+│ └───────────────────────┬───────────────────────────┘          │
+└─────────────────────────┼───────────────────────────────────────┘
+                          v
+                 ews_scored_YYYY-MM-DD.csv
+                          │
+         ┌────────────────┴────────────────┐
+         v                                 v
+┌──────────────────────────┐   ┌─────────────────────────────────┐
+│ Stage 6: Validation      │   │ Stage 7: Monitoring/Stress      │
+│ • backtest_monthly.py    │   │ • run_monitoring.py             │
+│ • calculate_psi.py       │   │ • stress_test.py                │
+│ • plot_validation.py     │   │                                 │
+│                          │   │                                 │
+│ Outputs:                 │   │ Outputs:                        │
+│ • monthly_metrics.csv    │   │ • monitoring_*.json             │
+│ • psi_monthly.csv        │   │ • stress_results.csv            │
+│ • validation_*.png       │   │ • STRESS_TEST_NOTE.md           │
+│ • VALIDATION_REPORT.md   │   │                                 │
+└──────────────────────────┘   └─────────────────────────────────┘</code></pre>
+<hr>
+</section>
+<section id="key-files-artifacts" class="level2">
+<h2 class="anchored" data-anchor-id="key-files-artifacts">Key Files &amp; Artifacts</h2>
+<section id="input-data" class="level3">
+<h3 class="anchored" data-anchor-id="input-data">Input Data</h3>
+<pre><code>data/
+├── raw/                              # Stage 1.2 outputs
+│   ├── fin_quarterly.parquet         # 12K rows (1K × 12Q)
+│   ├── credit_daily.parquet          # 180K rows (1K × 180d)
+│   ├── cashflow_daily.parquet        # 180K rows
+│   ├── covenant.parquet              # 180K rows
+│   └── labels.parquet                # 1K rows
+├── processed/
+│   ├── backtest_cohorts.parquet      # 180K rows (backtest)
+│   ├── model_features.parquet        # 1K rows (20+ features)
+│   ├── scores_raw.csv                # Raw model outputs
+│   ├── scores_calibrated.csv         # Calibrated PD + tiers
+│   └── portfolio_scored.csv          # Production portfolio</code></pre>
+</section>
+<section id="model-artifacts" class="level3">
+<h3 class="anchored" data-anchor-id="model-artifacts">Model Artifacts</h3>
+<pre><code>artifacts/
+├── models/
+│   ├── lgb_model.pkl                 # Trained LightGBM (500 trees)
+│   ├── calibrator.pkl                # Platt scaler
+│   ├── feature_names.json            # 20 feature list
+│   ├── thresholds.json               # Red/Amber cutoffs
+│   └── baseline_metrics.json         # AUC, KS, Brier
+├── calibration/
+│   ├── calibrator_isotonic.pkl       # Isotonic regression
+│   ├── thresholds.json               # Absolute PD thresholds
+│   └── mapping.csv                   # Score → PD mapping
+├── shap/
+│   ├── summary.json                  # Global feature importance
+│   ├── feature_importance.csv        # SHAP rankings
+│   └── top_drivers_per_customer.csv  # Top 3 drivers per alert
+├── backtest/
+│   ├── monthly_metrics.csv           # 18-month performance
+│   ├── psi_monthly.csv               # Stability tracking
+│   ├── threshold_sweep.csv           # Precision/Recall curves
+│   └── BACKTEST_REPORT.html          # Quarto report
+├── validation/
+│   ├── plots/
+│   │   ├── auc_ks_trend.png
+│   │   ├── decile_calibration.png
+│   │   ├── precision_recall_curve.png
+│   │   ├── alert_volume_vs_threshold.png
+│   │   └── validation_dashboard.png
+│   └── VALIDATION_REPORT_EN.md       # English validation report
+├── scoring/
+│   ├── ews_scored_2025-06-30.csv     # Scored customers
+│   └── thresholds_used.json          # Audit trail
+├── monitoring/
+│   ├── monitoring_YYYYMMDD.json      # Monthly snapshots
+│   └── monitoring_metrics.csv        # Cumulative tracking
+└── stress_testing/
+    ├── stress_results.csv            # Scenario results
+    ├── stress_scenarios.yaml         # Scenario definitions
+    └── STRESS_TEST_NOTE.md           # Stress test report</code></pre>
+<hr>
+</section>
+</section>
+<section id="execution-guide" class="level2">
+<h2 class="anchored" data-anchor-id="execution-guide">Execution Guide</h2>
+<section id="full-pipeline-from-scratch" class="level3">
+<h3 class="anchored" data-anchor-id="full-pipeline-from-scratch">Full Pipeline (from scratch)</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 1. Generate data</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> src/gen_data/gen_cohorts.py <span class="at">--start</span> 2024-01-31 <span class="at">--end</span> 2025-06-30 <span class="at">--n</span> 10000</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> src/gen_data/gen_input.py <span class="at">--output-dir</span> data/raw <span class="at">--n</span> 1000</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> src/gen_data/gen_portfolio.py <span class="at">--output</span> data/processed/portfolio_scored.csv</span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a><span class="co"># 2. Feature engineering</span></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> src/modeling/feature_engineering.py <span class="dt">\</span></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">--raw-dir</span> data/raw <span class="dt">\</span></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">--asof-date</span> 2025-06-30 <span class="dt">\</span></span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">--output</span> data/processed/model_features.parquet</span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a><span class="co"># 3. Train model</span></span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> src/modeling/train_baseline.py <span class="dt">\</span></span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a>    <span class="at">--input</span> data/processed/model_features.parquet <span class="dt">\</span></span>
+<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a>    <span class="at">--target</span> event_h12m <span class="dt">\</span></span>
+<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a>    <span class="at">--outdir</span> artifacts/models</span>
+<span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-18"><a href="#cb10-18" aria-hidden="true" tabindex="-1"></a><span class="co"># 4. Calibration (Optional - only if switching to absolute thresholds)</span></span>
+<span id="cb10-19"><a href="#cb10-19" aria-hidden="true" tabindex="-1"></a><span class="co"># Main pipeline uses percentile thresholds from train_baseline.py</span></span>
+<span id="cb10-20"><a href="#cb10-20" aria-hidden="true" tabindex="-1"></a><span class="co"># Run this step ONLY if business requires absolute PD cutoffs</span></span>
+<span id="cb10-21"><a href="#cb10-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-22"><a href="#cb10-22" aria-hidden="true" tabindex="-1"></a><span class="co"># First, extract raw scores from trained model:</span></span>
+<span id="cb10-23"><a href="#cb10-23" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> src/make_scores_raw.py <span class="dt">\</span></span>
+<span id="cb10-24"><a href="#cb10-24" aria-hidden="true" tabindex="-1"></a>    <span class="at">--features</span> data/processed/feature_ews.parquet <span class="dt">\</span></span>
+<span id="cb10-25"><a href="#cb10-25" aria-hidden="true" tabindex="-1"></a>    <span class="at">--model</span> artifacts/models/model_lgbm.pkl <span class="dt">\</span></span>
+<span id="cb10-26"><a href="#cb10-26" aria-hidden="true" tabindex="-1"></a>    <span class="at">--y-col</span> event_h12m <span class="dt">\</span></span>
+<span id="cb10-27"><a href="#cb10-27" aria-hidden="true" tabindex="-1"></a>    <span class="at">--out</span> data/processed/scores_raw.csv</span>
+<span id="cb10-28"><a href="#cb10-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-29"><a href="#cb10-29" aria-hidden="true" tabindex="-1"></a><span class="co"># Then apply isotonic calibration with absolute thresholds:</span></span>
+<span id="cb10-30"><a href="#cb10-30" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> src/calibrate.py <span class="dt">\</span></span>
+<span id="cb10-31"><a href="#cb10-31" aria-hidden="true" tabindex="-1"></a>    <span class="at">--input</span> data/processed/scores_raw.csv <span class="dt">\</span></span>
+<span id="cb10-32"><a href="#cb10-32" aria-hidden="true" tabindex="-1"></a>    <span class="at">--y-col</span> event_h12m <span class="dt">\</span></span>
+<span id="cb10-33"><a href="#cb10-33" aria-hidden="true" tabindex="-1"></a>    <span class="at">--score-col</span> score_raw <span class="dt">\</span></span>
+<span id="cb10-34"><a href="#cb10-34" aria-hidden="true" tabindex="-1"></a>    <span class="at">--red-thr</span> 0.20 <span class="dt">\</span></span>
+<span id="cb10-35"><a href="#cb10-35" aria-hidden="true" tabindex="-1"></a>    <span class="at">--amber-thr</span> 0.05 <span class="dt">\</span></span>
+<span id="cb10-36"><a href="#cb10-36" aria-hidden="true" tabindex="-1"></a>    <span class="at">--outdir</span> artifacts/calibration</span>
+<span id="cb10-37"><a href="#cb10-37" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-38"><a href="#cb10-38" aria-hidden="true" tabindex="-1"></a><span class="co"># Note: By default, train_baseline.py already creates calibrated scores</span></span>
+<span id="cb10-39"><a href="#cb10-39" aria-hidden="true" tabindex="-1"></a><span class="co"># with percentile-based thresholds (Red=top 5%, Amber=top 10%)</span></span>
+<span id="cb10-40"><a href="#cb10-40" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-41"><a href="#cb10-41" aria-hidden="true" tabindex="-1"></a><span class="co"># 5. Batch scoring</span></span>
+<span id="cb10-42"><a href="#cb10-42" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> src/scoring.py <span class="dt">\</span></span>
+<span id="cb10-43"><a href="#cb10-43" aria-hidden="true" tabindex="-1"></a>    <span class="at">--features</span> data/processed/portfolio_scored.csv <span class="dt">\</span></span>
+<span id="cb10-44"><a href="#cb10-44" aria-hidden="true" tabindex="-1"></a>    <span class="at">--model</span> artifacts/models/lgb_model.pkl <span class="dt">\</span></span>
+<span id="cb10-45"><a href="#cb10-45" aria-hidden="true" tabindex="-1"></a>    <span class="at">--thresholds</span> artifacts/calibration/thresholds.json <span class="dt">\</span></span>
+<span id="cb10-46"><a href="#cb10-46" aria-hidden="true" tabindex="-1"></a>    <span class="at">--asof</span> 2025-06-30 <span class="dt">\</span></span>
+<span id="cb10-47"><a href="#cb10-47" aria-hidden="true" tabindex="-1"></a>    <span class="at">--outdir</span> artifacts/scoring</span>
+<span id="cb10-48"><a href="#cb10-48" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-49"><a href="#cb10-49" aria-hidden="true" tabindex="-1"></a><span class="co"># 6. Validation</span></span>
+<span id="cb10-50"><a href="#cb10-50" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> src/backtest/backtest_monthly.py</span>
+<span id="cb10-51"><a href="#cb10-51" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> src/backtest/calculate_psi.py</span>
+<span id="cb10-52"><a href="#cb10-52" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> src/plot_validation.py all</span>
+<span id="cb10-53"><a href="#cb10-53" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-54"><a href="#cb10-54" aria-hidden="true" tabindex="-1"></a><span class="co"># 7. Monitoring</span></span>
+<span id="cb10-55"><a href="#cb10-55" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> src/run_monitoring.py <span class="at">--asof</span> 2025-06-30</span>
+<span id="cb10-56"><a href="#cb10-56" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> src/stress_test.py <span class="at">--scenarios</span> artifacts/stress_testing/stress_scenarios.yaml</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="quick-validation-dashboard-only" class="level3">
+<h3 class="anchored" data-anchor-id="quick-validation-dashboard-only">Quick Validation Dashboard Only</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> src/plot_validation.py dashboard</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<hr>
+</section>
+</section>
+<section id="performance-benchmarks" class="level2">
+<h2 class="anchored" data-anchor-id="performance-benchmarks">Performance Benchmarks</h2>
+<section id="model-metrics-test-set" class="level3">
+<h3 class="anchored" data-anchor-id="model-metrics-test-set">Model Metrics (Test Set)</h3>
+<ul>
+<li><strong>AUC</strong>: 92.5% (target &gt; 80%) ✓✓ (excellent)</li>
+<li><strong>KS</strong>: 78.3% (excellent separation)</li>
+<li><strong>Brier Score</strong>: 1.96% (target &lt; 2%) ✓</li>
+<li><strong>PR-AUC</strong>: 16.1% (reasonable for 1.37% default rate)</li>
+</ul>
+</section>
+<section id="operational-metrics-backtest-average" class="level3">
+<h3 class="anchored" data-anchor-id="operational-metrics-backtest-average">Operational Metrics (Backtest Average)</h3>
+<ul>
+<li><strong>Amber Alert Rate</strong>: 8.3% (830 customers/month)</li>
+<li><strong>Amber Precision</strong>: 9.6% (1 in 10 alerts is real default)</li>
+<li><strong>Amber Recall</strong>: 57.5% (catches 57.5% of defaults)</li>
+<li><strong>Red Alert Rate</strong>: 4.2% (420 customers/month)</li>
+<li><strong>False Positive Rate</strong>: 90.4% (9 out of 10 Amber alerts are false)</li>
+<li><strong>Missed Defaults</strong>: 42.5% (not flagged by system)</li>
+<li><strong>Workload</strong>: ~15 FTE needed (5 for Amber, 10 for Red)</li>
+</ul>
+</section>
+<section id="stability-18-months-backtest" class="level3">
+<h3 class="anchored" data-anchor-id="stability-18-months-backtest">Stability (18 months backtest)</h3>
+<ul>
+<li><strong>PSI</strong>: 0.00 (synthetic data, perfect stability)</li>
+<li><strong>AUC Range</strong>: 79.2% – 85.9% (±3.5% variation)</li>
+<li><strong>AUC Mean (backtest)</strong>: 82.3% (slightly lower than test set due to time decay)</li>
+<li><strong>No degradation</strong> observed in test period</li>
+</ul>
+<hr>
+</section>
+</section>
+<section id="key-assumptions-limitations" class="level2">
+<h2 class="anchored" data-anchor-id="key-assumptions-limitations">Key Assumptions &amp; Limitations</h2>
+<section id="data-quality" class="level3">
+<h3 class="anchored" data-anchor-id="data-quality">Data Quality</h3>
+<ol type="1">
+<li><strong>Synthetic Data</strong>: Test data is artificially generated
+<ul>
+<li>No real-world noise (missing data, reporting delays, data errors)</li>
+<li>PSI = 0 is unrealistic (real production will have drift)</li>
+<li><strong>Mitigation</strong>: Run 6-month pilot with real data</li>
+</ul></li>
+<li><strong>Label Quality</strong>: Binary default definition (DPD ≥ 90 for 30 days)
+<ul>
+<li>May not capture all credit deterioration signals</li>
+<li>No restructuring/forbearance cases simulated</li>
+</ul></li>
+</ol>
+</section>
+<section id="model-scope" class="level3">
+<h3 class="anchored" data-anchor-id="model-scope">Model Scope</h3>
+<ol type="1">
+<li><strong>No Segmentation</strong>: Single model for all sectors/sizes
+<ul>
+<li>May underperform in specific industries (Construction, Retail)</li>
+<li><strong>Recommendation</strong>: Build sector-specific models if performance gaps found</li>
+</ul></li>
+<li><strong>12-Month Horizon Only</strong>: Fixed 12-month PD
+<ul>
+<li>No 6-month or 24-month variants</li>
+<li>May miss near-term acute risks or long-term structural issues</li>
+</ul></li>
+<li><strong>Feature Coverage</strong>: 20 features (financial + behavioral)
+<ul>
+<li>No macroeconomic variables (GDP, interest rates, FX)</li>
+<li>No qualitative factors (management quality, industry trends)</li>
+<li>No external data (credit bureau, industry benchmarks)</li>
+</ul></li>
+</ol>
+</section>
+<section id="operational-constraints" class="level3">
+<h3 class="anchored" data-anchor-id="operational-constraints">Operational Constraints</h3>
+<ol type="1">
+<li><strong>High False Positive Rate</strong>: 90% of Amber alerts are false
+<ul>
+<li>Risk of alert fatigue</li>
+<li><strong>Mitigation</strong>: Clear workflow, Red priority, periodic threshold review</li>
+</ul></li>
+<li><strong>Missed Defaults</strong>: 42.5% not caught by Amber/Red
+<ul>
+<li>System is supplementary, not standalone</li>
+<li><strong>Mitigation</strong>: Combine with quarterly credit reviews</li>
+</ul></li>
+</ol>
+<hr>
+</section>
+</section>
+<section id="appendix-technical-details" class="level2">
+<h2 class="anchored" data-anchor-id="appendix-technical-details">Appendix: Technical Details</h2>
+<section id="lightgbm-hyperparameters" class="level3">
+<h3 class="anchored" data-anchor-id="lightgbm-hyperparameters">LightGBM Hyperparameters</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>params <span class="op">=</span> {</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">'objective'</span>: <span class="st">'binary'</span>,</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">'metric'</span>: <span class="st">'auc'</span>,</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">'num_leaves'</span>: <span class="dv">31</span>,</span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">'learning_rate'</span>: <span class="fl">0.05</span>,</span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>    <span class="st">'n_estimators'</span>: <span class="dv">500</span>,</span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>    <span class="st">'min_child_samples'</span>: <span class="dv">20</span>,</span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>    <span class="st">'feature_fraction'</span>: <span class="fl">0.8</span>,</span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>    <span class="st">'bagging_fraction'</span>: <span class="fl">0.8</span>,</span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>    <span class="st">'bagging_freq'</span>: <span class="dv">5</span>,</span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a>    <span class="st">'verbosity'</span>: <span class="op">-</span><span class="dv">1</span>,</span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a>    <span class="st">'early_stopping_rounds'</span>: <span class="dv">50</span></span>
+<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="feature-importance-top-10" class="level3">
+<h3 class="anchored" data-anchor-id="feature-importance-top-10">Feature Importance (Top 10)</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 5%">
+<col style="width: 40%">
+<col style="width: 11%">
+<col style="width: 42%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Rank</th>
+<th>Feature</th>
+<th>SHAP Value</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>1</td>
+<td><code>covenant_breach_cnt_180d</code></td>
+<td>0.710</td>
+<td>Covenant violation count (180 days)</td>
+</tr>
+<tr class="even">
+<td>2</td>
+<td><code>delta_dso_qoq</code></td>
+<td>0.586</td>
+<td>Days Sales Outstanding QoQ change</td>
+</tr>
+<tr class="odd">
+<td>3</td>
+<td><code>dpo</code></td>
+<td>0.530</td>
+<td>Days Payable Outstanding</td>
+</tr>
+<tr class="even">
+<td>4</td>
+<td><code>icr_ttm</code></td>
+<td>0.504</td>
+<td>Interest Coverage Ratio (TTM)</td>
+</tr>
+<tr class="odd">
+<td>5</td>
+<td><code>%util_p95_60d</code></td>
+<td>0.503</td>
+<td>95th percentile utilization (60 days)</td>
+</tr>
+<tr class="even">
+<td>6</td>
+<td><code>debt_to_ebitda</code></td>
+<td>0.471</td>
+<td>Leverage ratio (Debt/EBITDA)</td>
+</tr>
+<tr class="odd">
+<td>7</td>
+<td><code>dso</code></td>
+<td>0.359</td>
+<td>Days Sales Outstanding</td>
+</tr>
+<tr class="even">
+<td>8</td>
+<td><code>dpd_trend_180d</code></td>
+<td>0.326</td>
+<td>DPD trend direction (180 days)</td>
+</tr>
+<tr class="odd">
+<td>9</td>
+<td><code>dpd_max_180d</code></td>
+<td>0.320</td>
+<td>Maximum days past due (180 days)</td>
+</tr>
+<tr class="even">
+<td>10</td>
+<td><code>doh</code></td>
+<td>0.279</td>
+<td>Days on Hand (inventory)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Top 3 features</strong> account for <strong>40.9%</strong> of model explanatory power (total SHAP = 1.826).</p>
+<p><strong>Note</strong>: All features are z-score normalized by sector &amp; size (<code>__zs_sector_size</code> suffix).</p>
+<hr>
+</section>
+</section>
+</section>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>
